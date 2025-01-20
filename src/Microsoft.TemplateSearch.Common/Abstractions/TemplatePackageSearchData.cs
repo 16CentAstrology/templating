@@ -1,9 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.TemplateSearch.Common.Abstractions;
 
 namespace Microsoft.TemplateSearch.Common
@@ -11,6 +8,7 @@ namespace Microsoft.TemplateSearch.Common
     /// <summary>
     /// Template package searchable data.
     /// </summary>
+    [System.Diagnostics.DebuggerDisplay("{Name}@{Version}")]
     public partial class TemplatePackageSearchData : ITemplatePackageInfo
     {
         public TemplatePackageSearchData(ITemplatePackageInfo packInfo, IEnumerable<TemplateSearchData> templates, IDictionary<string, object>? data = null)
@@ -30,7 +28,7 @@ namespace Microsoft.TemplateSearch.Common
             Version = packInfo.Version;
             TotalDownloads = packInfo.TotalDownloads;
             Owners = packInfo.Owners;
-            Verified = packInfo.Verified;
+            Reserved = packInfo.Reserved;
             Templates = templates.ToList();
             Description = packInfo.Description;
             IconUrl = packInfo.IconUrl;
@@ -50,7 +48,7 @@ namespace Microsoft.TemplateSearch.Common
         public IReadOnlyList<string> Owners { get; }
 
         /// <inheritdoc/>
-        public bool Verified { get; }
+        public bool Reserved { get; }
 
         /// <inheritdoc/>
         public string? Description { get; }

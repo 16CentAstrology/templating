@@ -9,6 +9,7 @@
 | [Add projects to a solution file](#add-projects-to-a-solution-file) | `D396686C-DE0E-4DE6-906D-291CD29FC5DE` |
 | [Change file permissions (Unix/OS X)](#change-file-permissions) | `CB9A6CF3-4F5C-4860-B9D2-03A574959774` |
 | [Display manual instructions](#display-manual-instructions) | `AC1156F7-BB77-4DB8-B28F-24EEBCCA1E5C` |
+| [Add a property to an existing JSON file](#add-a-property-to-an-existing-json-file) | `695A3659-EB40-4FF5-A6A6-C9C4E629FCB0` |
 
 # Base configuration
 Each post action has set of standard properties as well as custom properties defined by certain post action.
@@ -20,6 +21,8 @@ The standard properties are listed below.
    - `configFile` (string) (optional): Additional configuration for the associated post action. The structure & content will vary based on the post action.
    - <a name="continueOnError"></a>`continueOnError` (bool) (optional): If this action fails, the value of continueOnError indicates whether to process the next action, or stop processing the post actions. Should be set to true when subsequent actions rely on the result of the current action. The default value is false.
    - `manualInstructions` (array) (optional): An ordered list of possible instructions to display if the action cannot be performed. Each element in the list must contain a key named "text", whose value contains the instructions. Each element may also optionally provide a key named "condition" - a boolean expression. The first instruction with blank condition is considered a default. If true conditions are present, the last one of them will be considered valid, all other ignored. It is recommended not to have more than one true condition at the time.
+   - `applyFileRenamesToArgs` (array) (optional): A list of arguments names from 'args' to which the file renames configured in symbols should be applied. By default, the file renames are not applied. Available since .NET SDK 8.0.100.
+   - `applyFileRenamesToManualInstructions` (boolean) (optional): If set to true, the file renames configured in symbols should be applied to manual instructions. By default, the file renames are not applied. Available since .NET SDK 8.0.100.
 
 # Restore NuGet packages
 
@@ -31,6 +34,22 @@ Used to restore NuGet packages after project create.
       - `files` (string|array) (optional):
         - `string`: A semicolon delimited list of files that should be restored. If specified, the primary outputs will be ignored for processing. If not specified, matching primary outputs are restored.
         - `array`: An array of files that should be restored. If specified, the primary outputs will be ignored for processing. If not specified, matching primary outputs are restored.
+
+      Note: the file path specified in `files` is used as glob pattern matching relative source path that starts with `./`. If none of the patterns is matched, matching primary outputs are restored.
+
+      Given that relative source paths are:
+      - ./src/Client/Client.csproj
+      - ./src/Client/Client.Library.csproj
+      - ./src/Client/Client.Test.csproj
+      
+      The following patterns can be used.
+      |Description|Glob Pattern|
+      |-|-|
+      |Exact path matching single project|`./src/Client/Client.Test.csproj`|
+      |Wildcard `*` matching multiple projects|`./src/Client/Client.*.csproj`|
+      |Globstar `**` recursively matching multiple layers of directories|`**/Client.Library.csproj;**/Client.csproj`|
+      |File name without parent path matching the project with the same name|`Client.Library.csproj`|
+
  - **Supported in**:
    - `dotnet new3`
    - `dotnet new` (2.0.0 or higher)
@@ -77,7 +96,29 @@ Restores the files mentioned in `files` argument. The primary outputs will be ig
   "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
   "continueOnError": true,
   "args": {
-    "files": ["Client/Client.csproj", "Server/Server.csproj"]
+    "files": ["./Client/Client.csproj", "./Server/Server.csproj"]
+  }
+}]
+```
+
+If none of files mentioned in `files` argument is matched, the primary outputs will be restored.
+
+```
+"primaryOutputs": [
+  {
+    "path": "Primary/Output/PrimaryOutput.csproj"        // will be restored
+  }
+],
+"postActions": [{
+  "condition": "(!skipRestore)",
+  "description": "Restore NuGet packages required by this project.",
+  "manualInstructions": [{
+    "text": "Run 'dotnet restore'"
+  }],
+  "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+  "continueOnError": true,
+  "args": {
+    "files": ["Client/Client.csproj"]        // This will not match any project because relative source path starts with "./"
   }
 }]
 ```
@@ -210,6 +251,50 @@ Includes a reference to `SomeDependency` into `MyProjectFile`. The referenced pr
   }
 }]
 ```
+
+## Adding references to existing projects
+
+It is possible to add references to existing projects in your working directory. Since the name of the existing project is likely not a constant value for all template instantiations, a symbol can be used to pass the name of the existing project.
+
+The example below demonstrates how to add the existing project ```src/AlreadyExisting/AlreadyExisting.csproj``` as a reference to the template source project ```Project1/Project1.csproj```.
+
+```
+{
+  "symbols": {
+    "existingProject": {
+      ...
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "ExistingProject/ExistingProject.csproj",
+      "fileRename": "ExistingProjectPath" // Must be same as targetFile
+    }
+  },
+  "postActions": [
+    {
+      "Description": "Add ProjectReference to ExistingProject/ExistingProject.csproj",
+      "applyFileRenamesToArgs": [
+        "targetFiles" // Must be specified
+      ],
+      "args": {
+        "targetFiles": [
+          "ExistingProjectPath" // Must be same as fileRename
+        ],
+        "referenceType": "project",
+        "reference": "Project1/Project1.csproj"
+      }
+    }]
+}
+```
+
+The template above:
+- Configures the ```existingProject``` parameter *symbol* with a ```fileRename``` configuration. 
+- Instructs the *'add reference to a project file'* post action to apply ```fileRename``` to the ```targetFiles``` argument.
+- Uses the value passed to the ```existingProject``` *symbol* to replace the value of the matching  ```targetFiles```.
+
+This template can be instantiated using:
+
+```dotnet new [templateName] --existingProject src/AlreadyExisting/AlreadyExisting.csproj```
+
 
 # Add project(s) to a solution file
 
@@ -370,4 +455,35 @@ Command is printed only if defined in post action arguments.
   },
   "continueOnError": true
 }]
+```
+
+# Add a property to an existing JSON file
+
+Adds a new JSON property in an existing JSON file.
+
+- **Action ID** : 695A3659-EB40-4FF5-A6A6-C9C4E629FCB0
+- **Specific Configuration** :
+   - `args`:
+      - `jsonFileName (string)`: The path to the JSON file that must be modified.
+      - `parentPropertyPath (string)` (optional): Specifies an existing property in the JSON file for which the new property must be a child property. The complete path must be specified, using a colon (:) as a separator character, for instance, `Person:Address`. If parentPropertyPath is not defined, the new property will be added to the root of the JSON document.
+   - `newJsonPropertyName (string)`: The name that must be given to the new property.
+   - `newJsonPropertyValue (string)`: The value that must be assigned to the new property. This must be a valid JSON.
+- **Supported in** :
+   - dotnet new3
+   - dotnet new (2.0.0 or higher)
+
+## Example
+```
+"postActions": [{  `
+  `"description": "Adds a new JSON property in an existing JSON file.",`
+  `"manualInstructions": [ { "text": "Add a new property 'LogLevel' with value 'Information' to '.\deployment.json' under existing property 'moduleConfiguration:edgeAgent:properties.desired'" }  ],`
+  `"actionId": "695A3659-EB40-4FF5-A6A6-C9C4E629FCB0",`
+  `"args": {`
+    `"jsonFileName": ".\deployment.json",`
+    `"parentPropertyPath": "moduleConfiguration:edgeAgent:properties.desired",`
+    `"newJsonPropertyName": "LogLevel",`
+    `"newJsonPropertyValue": "Information"`
+  `},`
+  `"continueOnError": true`
+`}]
 ```

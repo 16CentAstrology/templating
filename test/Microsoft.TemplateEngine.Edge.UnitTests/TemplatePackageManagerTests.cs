@@ -1,9 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using FakeItEasy;
 using Microsoft.TemplateEngine.Abstractions;
+using Microsoft.TemplateEngine.Abstractions.Installer;
+using Microsoft.TemplateEngine.Abstractions.Mount;
 using Microsoft.TemplateEngine.Abstractions.TemplatePackage;
 using Microsoft.TemplateEngine.Edge.Settings;
+using Microsoft.TemplateEngine.Edge.UnitTests.Fakes;
+using Microsoft.TemplateEngine.Mocks;
 using Microsoft.TemplateEngine.TestHelper;
 using Microsoft.TemplateEngine.Tests;
 using Microsoft.TemplateEngine.Utils;
@@ -39,10 +44,9 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
 
             FakeFactory.SetNuPkgsAndFolders(folders: folders);
             engineEnvironmentSettings.Components.AddComponent(typeof(ITemplatePackageProviderFactory), new FakeFactory());
-            var templates = await new TemplatePackageManager(engineEnvironmentSettings).GetTemplatesAsync(default)
-                .ConfigureAwait(false);
+            var templates = await new TemplatePackageManager(engineEnvironmentSettings).GetTemplatesAsync(default);
 
-            Assert.Equal(1, templates.Count);
+            Assert.Single(templates);
             Assert.Equal("sample99", templates.Single().ShortNameList[0]);
         }
 
@@ -70,10 +74,9 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             FakeFactory.SetNuPkgsAndFolders(folders: folders.Skip(50).Take(50));
             engineEnvironmentSettings.Components.AddComponent(typeof(ITemplatePackageProviderFactory), new FakeFactory());
 
-            var templates = await new TemplatePackageManager(engineEnvironmentSettings).GetTemplatesAsync(default)
-                .ConfigureAwait(false);
+            var templates = await new TemplatePackageManager(engineEnvironmentSettings).GetTemplatesAsync(default);
 
-            Assert.Equal(1, templates.Count);
+            Assert.Single(templates);
             Assert.Equal("sample49", templates.Single().ShortNameList[0]);
         }
 
@@ -87,11 +90,52 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
 
             FakeFactory.SetNuPkgsAndFolders(nupkgsWildcard);
             engineEnvironmentSettings.Components.AddComponent(typeof(ITemplatePackageProviderFactory), new FakeFactory());
-            await new TemplatePackageManager(engineEnvironmentSettings).GetTemplatesAsync(default).ConfigureAwait(false);
+            await new TemplatePackageManager(engineEnvironmentSettings).GetTemplatesAsync(default);
 
             var allNupkgs = Directory.GetFiles(nupkgFolder);
             // All mount points should have been scanned
             AssertMountPointsWereOpened(allNupkgs, engineEnvironmentSettings);
+        }
+
+        [Theory]
+        [InlineData("ManagedPackage", null)]
+        [InlineData("ManagedPackage", "1.0.0")]
+        public async Task GetsManagedPackageWithTemplates(string packageIdentifier, string? version)
+        {
+            var engineEnvironmentSettings = _environmentSettingsHelper.CreateEnvironment(
+               additionalComponents: new List<(Type, IIdentifiedComponent)>
+               {
+                   (typeof(IGenerator), GetGeneratorMock()),
+                   (typeof(IInstallerFactory), GetInstallerFactoryMock()),
+                   (typeof(IMountPointFactory), new MountPointFactoryMock()),
+                   (typeof(ITemplatePackageProviderFactory), new FakeManagedPackageProviderFactory())
+               });
+
+            var result = await new TemplatePackageManager(engineEnvironmentSettings)
+                .GetManagedTemplatePackageAsync(packageIdentifier, version, default);
+            var (package, templates) = result;
+
+            Assert.NotNull(templates);
+            Assert.Single(templates);
+            Assert.NotNull(package);
+            Assert.Equal("ManagedMount", package.MountPointUri);
+        }
+
+        [Theory]
+        [InlineData("ManagedPackage", "1.0.1")]
+        public async Task CantGetManagedPackageWithTemplatesDueToVersionMismatchAsync(string packageIdentifier, string? version)
+        {
+            var engineEnvironmentSettings = _environmentSettingsHelper.CreateEnvironment(
+               additionalComponents: new List<(Type, IIdentifiedComponent)>
+               {
+                   (typeof(IGenerator), GetGeneratorMock()),
+                   (typeof(IInstallerFactory), GetInstallerFactoryMock()),
+                   (typeof(IMountPointFactory), new MountPointFactoryMock()),
+                   (typeof(ITemplatePackageProviderFactory), new FakeManagedPackageProviderFactory())
+               });
+
+            var packageManager = new TemplatePackageManager(engineEnvironmentSettings);
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await packageManager.GetManagedTemplatePackageAsync(packageIdentifier, version, default));
         }
 
         [Fact]
@@ -109,7 +153,7 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             // Execute 1st time to create file on disk
             monitoredFileSystem.Reset();
             var templatePackageManager1 = new TemplatePackageManager(engineEnvironmentSettings);
-            await templatePackageManager1.GetTemplatesAsync(default).ConfigureAwait(false);
+            await templatePackageManager1.GetTemplatesAsync(default);
             Assert.Contains(new SettingsFilePaths(engineEnvironmentSettings).TemplateCacheFile, monitoredFileSystem.FilesOpened);
             // All mount points should have been scanned
             AssertMountPointsWereOpened(Directory.GetFiles(nupkgFolder), engineEnvironmentSettings);
@@ -117,17 +161,17 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             // Execute 2st time with different templatePackageManager to load existing cached created in 1st step
             monitoredFileSystem.Reset();
             var templatePackageManager2 = new TemplatePackageManager(engineEnvironmentSettings);
-            await templatePackageManager2.GetTemplatesAsync(default).ConfigureAwait(false);
+            await templatePackageManager2.GetTemplatesAsync(default);
             Assert.Contains(new SettingsFilePaths(engineEnvironmentSettings).TemplateCacheFile, monitoredFileSystem.FilesOpened);
             // No mount points should have been scanned
-            AssertMountPointsWereOpened(Array.Empty<string>(), engineEnvironmentSettings);
+            AssertMountPointsWereOpened([], engineEnvironmentSettings);
 
             // Execute 3rd time with same templatePackageManager to test that TemplateCacheFile is not parsed.
             monitoredFileSystem.Reset();
-            await templatePackageManager2.GetTemplatesAsync(default).ConfigureAwait(false);
+            await templatePackageManager2.GetTemplatesAsync(default);
             Assert.DoesNotContain(new SettingsFilePaths(engineEnvironmentSettings).TemplateCacheFile, monitoredFileSystem.FilesOpened);
             // No mount points should have been scanned
-            AssertMountPointsWereOpened(Array.Empty<string>(), engineEnvironmentSettings);
+            AssertMountPointsWereOpened([], engineEnvironmentSettings);
         }
 
         [Fact]
@@ -139,7 +183,7 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
 
             FakeFactory.SetNuPkgsAndFolders(validAndInvalidNuPkg);
             engineEnvironmentSettings.Components.AddComponent(typeof(ITemplatePackageProviderFactory), new FakeFactory());
-            await new TemplatePackageManager(engineEnvironmentSettings).GetTemplatesAsync(default).ConfigureAwait(false);
+            await new TemplatePackageManager(engineEnvironmentSettings).GetTemplatesAsync(default);
 
             var allNupkgs = validAndInvalidNuPkg.Take(1);
             // All mount points should have been scanned
@@ -157,7 +201,7 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             FakeFactory.SetNuPkgsAndFolders(nupkgsWildcard);
             engineEnvironmentSettings.Components.AddComponent(typeof(ITemplatePackageProviderFactory), new FakeFactory());
             TemplatePackageManager templatePackageManager = new TemplatePackageManager(engineEnvironmentSettings);
-            await templatePackageManager.GetTemplatesAsync(default).ConfigureAwait(false);
+            await templatePackageManager.GetTemplatesAsync(default);
 
             var allNupkgs = Directory.GetFiles(nupkgFolder);
             // All mount points should have been scanned
@@ -166,19 +210,19 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             var monitoredFileSystem = (MonitoredFileSystem)engineEnvironmentSettings.Host.FileSystem;
 
             monitoredFileSystem.Reset();
-            await templatePackageManager.GetTemplatesAsync(default).ConfigureAwait(false);
+            await templatePackageManager.GetTemplatesAsync(default);
             // Make sure that we don't rescan with force=false
-            AssertMountPointsWereOpened(Array.Empty<string>(), engineEnvironmentSettings);
+            AssertMountPointsWereOpened([], engineEnvironmentSettings);
 
             monitoredFileSystem.Reset();
-            await templatePackageManager.RebuildTemplateCacheAsync(default).ConfigureAwait(false);
+            await templatePackageManager.RebuildTemplateCacheAsync(default);
             // Make sure that we rescan with force=false
             AssertMountPointsWereOpened(allNupkgs, engineEnvironmentSettings);
 
             monitoredFileSystem.Reset();
-            await templatePackageManager.GetTemplatesAsync(default).ConfigureAwait(false);
+            await templatePackageManager.GetTemplatesAsync(default);
             // Make sure that we don't rescan with force=false
-            AssertMountPointsWereOpened(Array.Empty<string>(), engineEnvironmentSettings);
+            AssertMountPointsWereOpened([], engineEnvironmentSettings);
         }
 
         [Fact]
@@ -192,7 +236,7 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             FakeFactory.SetNuPkgsAndFolders(nupkgsWildcard);
             engineEnvironmentSettings.Components.AddComponent(typeof(ITemplatePackageProviderFactory), new FakeFactory());
             TemplatePackageManager templatePackageManager = new TemplatePackageManager(engineEnvironmentSettings);
-            await templatePackageManager.GetTemplatesAsync(default).ConfigureAwait(false);
+            await templatePackageManager.GetTemplatesAsync(default);
 
             var allNupkgs = Directory.GetFiles(nupkgFolder);
             // All mount points should have been scanned
@@ -203,9 +247,9 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             FakeFactory.TriggerChanged();
 
             monitoredFileSystem.Reset();
-            await templatePackageManager.GetTemplatesAsync(default).ConfigureAwait(false);
+            await templatePackageManager.GetTemplatesAsync(default);
             // Make sure that we don't rescan with force=false
-            AssertMountPointsWereOpened(Array.Empty<string>(), engineEnvironmentSettings);
+            AssertMountPointsWereOpened([], engineEnvironmentSettings);
         }
 
         [Fact]
@@ -219,7 +263,7 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             FakeFactory.SetNuPkgsAndFolders(allNupkgs);
             engineEnvironmentSettings.Components.AddComponent(typeof(ITemplatePackageProviderFactory), new FakeFactory());
             TemplatePackageManager templatePackageManager = new TemplatePackageManager(engineEnvironmentSettings);
-            var templatesAll = await templatePackageManager.GetTemplatesAsync(default).ConfigureAwait(false);
+            var templatesAll = await templatePackageManager.GetTemplatesAsync(default);
 
             // All mount points should have been scanned
             AssertMountPointsWereOpened(allNupkgs, engineEnvironmentSettings);
@@ -235,7 +279,7 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             allNupkgs.RemoveRange(1, allNupkgs.Count - 1);
             FakeFactory.TriggerChanged();
 
-            var templatesOnly1 = await templatePackageManager.GetTemplatesAsync(default).ConfigureAwait(false);
+            var templatesOnly1 = await templatePackageManager.GetTemplatesAsync(default);
 
             // Make sure that templates return only have MountPointUri of our remaining nupkg
             Assert.Equal(allNupkgs, templatesOnly1.Select(t => t.MountPointUri).Distinct().OrderBy(m => m));
@@ -250,22 +294,8 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             engineEnvironmentSettings.Components.AddComponent(typeof(ITemplatePackageProviderFactory), new FaultFakeFactory());
 
             TemplatePackageManager templatePackageManager = new TemplatePackageManager(engineEnvironmentSettings);
-            var templates = await templatePackageManager.GetTemplatesAsync(default).ConfigureAwait(false);
+            var templates = await templatePackageManager.GetTemplatesAsync(default);
             Assert.NotEmpty(templates);
-        }
-
-        private void AssertMountPointsWereScanned(IEnumerable<string> mountPoints, IEngineEnvironmentSettings environmentSettings)
-        {
-            string[] expectedScannedDirectories = mountPoints
-                .Select(x => x)
-                .OrderBy(x => x)
-                .ToArray();
-            string[] actualScannedDirectories = ((MonitoredFileSystem)environmentSettings.Host.FileSystem).DirectoriesScanned
-                .Select(dir => Path.Combine(dir.DirectoryName, dir.Pattern))
-                .OrderBy(x => x)
-                .ToArray();
-
-            Assert.Equal(expectedScannedDirectories, actualScannedDirectories);
         }
 
         private void AssertMountPointsWereOpened(IEnumerable<string> mountPoints, IEngineEnvironmentSettings environmentSettings)
@@ -283,11 +313,54 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             Assert.Equal(expectedScannedDirectories, actualScannedDirectories);
         }
 
-        private void AssertMountPointsWereNotScanned(IEnumerable<string> mountPoints, IEngineEnvironmentSettings environmentSettings)
+        internal IGenerator GetGeneratorMock()
         {
-            IEnumerable<string> expectedScannedDirectories = mountPoints;
-            IEnumerable<string> actualScannedDirectories = ((MonitoredFileSystem)environmentSettings.Host.FileSystem).DirectoriesScanned.Select(dir => Path.Combine(dir.DirectoryName, dir.Pattern));
-            Assert.Empty(actualScannedDirectories.Intersect(expectedScannedDirectories));
+            var generatorMock = A.Fake<IGenerator>();
+            A.CallTo(() => generatorMock.GetTemplatesFromMountPointAsync(A<IMountPoint>._, A<CancellationToken>._))
+                .ReturnsLazily(call =>
+                {
+                    var template = A.Fake<IScanTemplateInfo>();
+                    A.CallTo(() => template.MountPointUri).Returns("ManagedMount");
+                    A.CallTo(() => template.IsValid).Returns(true);
+                    IReadOnlyList<IScanTemplateInfo> templates = new List<IScanTemplateInfo>() { template };
+
+                    return Task.FromResult(templates);
+                });
+
+            return generatorMock;
+        }
+
+        public IInstallerFactory GetInstallerFactoryMock()
+        {
+            var installerFactoryMock = A.Fake<IInstallerFactory>();
+            A.CallTo(() => installerFactoryMock.Name).Returns("InstallerMock");
+            A.CallTo(() => installerFactoryMock.CreateInstaller(A<IEngineEnvironmentSettings>._, A<string>._))
+                .ReturnsLazily((IEngineEnvironmentSettings settings, string path) => GetInstallerMock(installerFactoryMock));
+
+            return installerFactoryMock;
+        }
+
+        internal class MountPointFactoryMock : IMountPointFactory
+        {
+            public Guid Id => Guid.Empty;
+
+            public bool TryMount(IEngineEnvironmentSettings environmentSettings, IMountPoint? parent, string mountPointUri, out IMountPoint? mountPoint)
+            {
+                mountPoint = new MockMountPoint(environmentSettings);
+                return true;
+            }
+        }
+
+        public interface IManagedInstallerMock : IInstaller, ISerializableInstaller;
+
+        internal IManagedInstallerMock GetInstallerMock(IInstallerFactory factory)
+        {
+            var installerMock = A.Fake<IManagedInstallerMock>();
+            A.CallTo(() => installerMock.Factory).Returns(factory);
+            A.CallTo(() => installerMock.Serialize(A<IManagedTemplatePackage>._))
+               .Returns(new TemplatePackageData(Guid.Empty, "ManagedMount", DateTime.Now, new Dictionary<string, string>()));
+
+            return installerMock;
         }
 
         private class FakeFactory : ITemplatePackageProviderFactory
@@ -373,17 +446,6 @@ namespace Microsoft.TemplateEngine.Edge.UnitTests
             {
                 NuPkgs = nupkgs;
                 Folders = folders;
-            }
-
-            public static void TriggerChanged()
-            {
-                foreach (var provider in AllCreatedProviders)
-                {
-                    if (provider.TryGetTarget(out var actualProvider))
-                    {
-                        actualProvider.UpdatePackages(NuPkgs, Folders);
-                    }
-                }
             }
 
             public static int StaticPriority { get; set; }

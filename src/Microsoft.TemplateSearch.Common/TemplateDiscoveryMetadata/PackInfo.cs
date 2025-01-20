@@ -1,9 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.TemplateSearch.Common.Abstractions;
 using Newtonsoft.Json;
 
@@ -18,13 +15,13 @@ namespace Microsoft.TemplateSearch.Common
             Version = version;
         }
 
-        internal PackInfo(string name, string version, long totalDownloads, IEnumerable<string> owners, bool verified = false)
+        internal PackInfo(string name, string version, long totalDownloads, IEnumerable<string> owners, bool reserved = false)
         {
             Name = name;
             Version = version;
             TotalDownloads = totalDownloads;
             Owners = owners.ToList();
-            Verified = verified;
+            Reserved = reserved;
         }
 
         [JsonProperty]
@@ -37,10 +34,10 @@ namespace Microsoft.TemplateSearch.Common
         public long TotalDownloads { get; }
 
         [JsonProperty]
-        public IReadOnlyList<string> Owners { get; } = Array.Empty<string>();
+        public IReadOnlyList<string> Owners { get; } = [];
 
         [JsonProperty]
-        public bool Verified { get; }
+        public bool Reserved { get; }
 
         //not supported for v1
         public string? Description => null;

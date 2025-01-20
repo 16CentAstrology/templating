@@ -1,16 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Core;
-using Microsoft.TemplateEngine.Core.Contracts;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Abstractions;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.ConfigModel;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Macros;
 using Microsoft.TemplateEngine.TestHelper;
-using Xunit;
 
 namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.MacroTests
 {
@@ -81,7 +77,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Macro
         [InlineData("", "string")]
         [InlineData("string", "string")]
         [InlineData("date", "date")]
-        public void EvaluateNowOverrideDatatypeInConfig(string type, string expectedType)
+        public void EvaluateNowOverrideDatatypeInConfig(string? type, string expectedType)
         {
             string variableName = "nowString";
             string format = string.Empty;
@@ -105,7 +101,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Macro
             NowMacroConfig config = new(macro, "test", "yyyy-MM-dd HH:mm:ss");
             macro.EvaluateDeterministically(_engineEnvironmentSettings, variables, config);
 
-            Assert.Equal(1, variables.Count);
+            Assert.Single(variables);
             Assert.Equal("1900-01-01 00:00:00", variables["test"].ToString());
         }
 
@@ -125,9 +121,9 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Macro
             IVariableCollection variables = new VariableCollection();
             NowMacro macro = new();
 
-            macro.EvaluateDeterministically(_engineEnvironmentSettings, variables, deferredConfig);
+            macro.EvaluateDeterministically(_engineEnvironmentSettings, variables, macro.CreateConfig(_engineEnvironmentSettings, deferredConfig));
 
-            Assert.Equal(1, variables.Count);
+            Assert.Single(variables);
             Assert.Equal("1900-01-01 00:00:00", variables["test"].ToString());
         }
 

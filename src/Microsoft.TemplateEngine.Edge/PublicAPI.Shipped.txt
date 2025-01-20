@@ -20,9 +20,6 @@ Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.FileSystem.get -> Micros
 Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.HostIdentifier.get -> string!
 Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.Logger.get -> Microsoft.Extensions.Logging.ILogger!
 Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.LoggerFactory.get -> Microsoft.Extensions.Logging.ILoggerFactory!
-Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.OnLogTiming.get -> System.Action<string!, System.TimeSpan, int>?
-Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.OnLogTiming.set -> void
-Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.RegisterDiagnosticLogger(string! category, System.Action<string!, string![]!>! messageHandler) -> void
 Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.Version.get -> string!
 Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.VirtualizeDirectory(string! path) -> void
 Microsoft.TemplateEngine.Edge.EngineEnvironmentSettings
@@ -59,8 +56,6 @@ Microsoft.TemplateEngine.Edge.Settings.ScanResult.Components.get -> System.Colle
 Microsoft.TemplateEngine.Edge.Settings.ScanResult.Dispose() -> void
 Microsoft.TemplateEngine.Edge.Settings.ScanResult.Localizations.get -> System.Collections.Generic.IReadOnlyList<Microsoft.TemplateEngine.Abstractions.ILocalizationLocator!>!
 Microsoft.TemplateEngine.Edge.Settings.ScanResult.MountPoint.get -> Microsoft.TemplateEngine.Abstractions.Mount.IMountPoint!
-Microsoft.TemplateEngine.Edge.Settings.ScanResult.ScanResult(Microsoft.TemplateEngine.Abstractions.Mount.IMountPoint! mountPoint, System.Collections.Generic.IReadOnlyList<Microsoft.TemplateEngine.Abstractions.ITemplate!>! templates, System.Collections.Generic.IReadOnlyList<Microsoft.TemplateEngine.Abstractions.ILocalizationLocator!>! localizations, System.Collections.Generic.IReadOnlyList<(string! AssemblyPath, System.Type! InterfaceType, Microsoft.TemplateEngine.Abstractions.IIdentifiedComponent! Instance)>! components) -> void
-Microsoft.TemplateEngine.Edge.Settings.ScanResult.Templates.get -> System.Collections.Generic.IReadOnlyList<Microsoft.TemplateEngine.Abstractions.ITemplate!>!
 Microsoft.TemplateEngine.Edge.Settings.TemplatePackageManager
 Microsoft.TemplateEngine.Edge.Settings.TemplatePackageManager.Dispose() -> void
 Microsoft.TemplateEngine.Edge.Settings.TemplatePackageManager.GetBuiltInManagedProvider(Microsoft.TemplateEngine.Edge.Settings.InstallationScope scope = Microsoft.TemplateEngine.Edge.Settings.InstallationScope.Global) -> Microsoft.TemplateEngine.Abstractions.TemplatePackage.IManagedTemplatePackageProvider!
@@ -272,3 +267,4 @@ static Microsoft.TemplateEngine.Edge.Template.InputDataStateUtil.GetInputDataSta
 static Microsoft.TemplateEngine.Edge.Template.TemplateEqualityComparer.Default.get -> System.Collections.Generic.IEqualityComparer<Microsoft.TemplateEngine.Abstractions.ITemplateInfo!>!
 static Microsoft.TemplateEngine.Edge.Template.TemplateMatchInfoEqualityComparer.Default.get -> System.Collections.Generic.IEqualityComparer<Microsoft.TemplateEngine.Edge.Template.ITemplateMatchInfo!>!
 ~Microsoft.TemplateEngine.Edge.FilterableTemplateInfo.ParameterDefinitions.get -> Microsoft.TemplateEngine.Abstractions.Parameters.IParameterDefinitionSet
+Microsoft.TemplateEngine.Edge.DefaultTemplateEngineHost.WorkingDirectory.get -> string!

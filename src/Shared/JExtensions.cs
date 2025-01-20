@@ -1,18 +1,11 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#if !NET6_0_OR_GREATER
-using System;
-using System.Collections.Generic;
-using System.IO;
-#endif
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Mount;
 using Microsoft.TemplateEngine.Abstractions.PhysicalFileSystem;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
-#nullable enable
 
 namespace Microsoft.TemplateEngine
 {
@@ -158,7 +151,7 @@ namespace Microsoft.TemplateEngine
         /// </summary>
         internal static IReadOnlyList<string> ToStringReadOnlyList(this JObject jObject, string propertyName, IReadOnlyList<string>? defaultValue = null)
         {
-            defaultValue ??= Array.Empty<string>();
+            defaultValue ??= [];
             JToken? token = jObject.Get<JToken>(propertyName);
             if (token == null)
             {
@@ -171,16 +164,16 @@ namespace Microsoft.TemplateEngine
         {
             if (token is not JObject obj)
             {
-                return Array.Empty<JProperty>();
+                return [];
             }
 
             if (key != null)
             {
                 if (!obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken? element))
                 {
-                    return Array.Empty<JProperty>();
+                    return [];
                 }
-                return element is not JObject jObj ? Array.Empty<JProperty>() : jObj.Properties();
+                return element is not JObject jObj ? [] : jObj.Properties();
             }
             return obj.Properties();
         }
@@ -222,9 +215,9 @@ namespace Microsoft.TemplateEngine
         /// Converts properties of <paramref name="token"/> to dictionary.
         /// Leaves the values as JToken.
         /// </summary>
-        internal static IReadOnlyDictionary<string, JToken> ToJTokenDictionary(this JToken token, StringComparer? comparaer = null, string? propertyName = null)
+        internal static IReadOnlyDictionary<string, JToken> ToJTokenDictionary(this JToken token, StringComparer? comparer = null, string? propertyName = null)
         {
-            Dictionary<string, JToken> result = new(comparaer ?? StringComparer.Ordinal);
+            Dictionary<string, JToken> result = new(comparer ?? StringComparer.Ordinal);
 
             foreach (JProperty property in token.PropertiesOf(propertyName))
             {
@@ -238,9 +231,9 @@ namespace Microsoft.TemplateEngine
         /// Converts properties of <paramref name="token"/> to dictionary.
         /// Values are serialized to string (as JToken). Strings are serialized as <see cref="JToken"/>, i.e. needs to be parsed prior to be used.
         /// </summary>
-        internal static IReadOnlyDictionary<string, string> ToJTokenStringDictionary(this JToken token, StringComparer? comparaer = null, string? propertyName = null)
+        internal static IReadOnlyDictionary<string, string> ToJTokenStringDictionary(this JToken token, StringComparer? comparer = null, string? propertyName = null)
         {
-            Dictionary<string, string> result = new(comparaer ?? StringComparer.Ordinal);
+            Dictionary<string, string> result = new(comparer ?? StringComparer.Ordinal);
 
             foreach (JProperty property in token.PropertiesOf(propertyName))
             {
@@ -274,7 +267,7 @@ namespace Microsoft.TemplateEngine
 
             if (token is not JArray arr)
             {
-                return Array.Empty<string>();
+                return [];
             }
 
             List<string> values = new();
@@ -299,7 +292,7 @@ namespace Microsoft.TemplateEngine
 
             if (token is not JArray arr)
             {
-                return Array.Empty<Guid>();
+                return [];
             }
 
             List<Guid> values = new();
@@ -342,9 +335,9 @@ namespace Microsoft.TemplateEngine
 
         internal static JObject ReadJObjectFromIFile(this IFile file)
         {
-            using (Stream s = file.OpenRead())
-            using (TextReader tr = new StreamReader(s, System.Text.Encoding.UTF8, true))
-            using (JsonReader r = new JsonTextReader(tr))
+            using Stream s = file.OpenRead();
+            using TextReader tr = new StreamReader(s, System.Text.Encoding.UTF8, true);
+            using JsonReader r = new JsonTextReader(tr);
             {
                 return JObject.Load(r);
             }
@@ -352,9 +345,9 @@ namespace Microsoft.TemplateEngine
 
         internal static JObject ReadObject(this IPhysicalFileSystem fileSystem, string path)
         {
-            using (var fileStream = fileSystem.OpenRead(path))
-            using (var textReader = new StreamReader(fileStream, System.Text.Encoding.UTF8, true))
-            using (var jsonReader = new JsonTextReader(textReader))
+            using Stream fileStream = fileSystem.OpenRead(path);
+            using var textReader = new StreamReader(fileStream, System.Text.Encoding.UTF8, true);
+            using var jsonReader = new JsonTextReader(textReader);
             {
                 return JObject.Load(jsonReader);
             }
@@ -362,9 +355,9 @@ namespace Microsoft.TemplateEngine
 
         internal static void WriteObject(this IPhysicalFileSystem fileSystem, string path, object obj)
         {
-            using (var fileStream = fileSystem.CreateFile(path))
-            using (var textWriter = new StreamWriter(fileStream, System.Text.Encoding.UTF8))
-            using (var jsonWriter = new JsonTextWriter(textWriter))
+            using Stream fileStream = fileSystem.CreateFile(path);
+            using var textWriter = new StreamWriter(fileStream, System.Text.Encoding.UTF8);
+            using var jsonWriter = new JsonTextWriter(textWriter);
             {
                 var serializer = new JsonSerializer();
                 serializer.Serialize(jsonWriter, obj);
@@ -394,6 +387,15 @@ namespace Microsoft.TemplateEngine
         internal static string ToJsonString(object obj)
         {
             return JToken.FromObject(obj).ToString(Formatting.None);
+        }
+
+        internal static string ToCamelCase(this string str)
+        {
+            return str switch
+            {
+                "" => str,
+                _ => str.First().ToString().ToLower() + str.Substring(1),
+            };
         }
 
     }

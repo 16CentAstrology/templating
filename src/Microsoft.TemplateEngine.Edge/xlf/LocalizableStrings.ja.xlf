@@ -25,7 +25,7 @@
         <target state="translated">パラメーター条件に循環依存関係が含まれています: [{0}]。パラメーターの現在の値を使用すると、パラメーターを決定論的に評価できるため、続行します。ただし、異なるパラメーターを持つインスタンス化によってエラーが発生する可能性があるため、テンプレートを確認する必要があります。</target>
         <note>{0} is the dependency chain</note>
       </trans-unit>
-      <trans-unit id="Constaint_Error_ArgumentHasEmptyString">
+      <trans-unit id="Constraint_Error_ArgumentHasEmptyString">
         <source>'{0}' should not contain empty items</source>
         <target state="translated">'{0}' に空の項目を含めることはできません</target>
         <note>{0} is JSON configuration for constraint</note>
@@ -130,6 +130,11 @@
         <target state="translated">{0} が正常にアンインストールされました。</target>
         <note />
       </trans-unit>
+      <trans-unit id="GlobalSettings_Error_CorruptedSettings">
+        <source>Failed to read installed template packages list at {0}. It might be due to the file is corrupted. Please review this file manually and fix the errors in JSON structure, or remove the file to clear up the list of list installed packages and reinstall them again. Details of the error: {1}.</source>
+        <target state="translated">{0}でインストールされているテンプレート パッケージの一覧を読み取ることができませんでした。ファイルが破損していることが原因である可能性があります。このファイルを手動で確認し、JSON 構造のエラーを修正するか、ファイルを削除してインストール済みパッケージの一覧を消去して再インストールしてください。エラーの詳細: {1}。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HostConstraint_Error_MissingMandatoryProperty">
         <source>'{0}' does not have mandatory property '{1}'.</source>
         <target state="translated">'{0}' には必須のプロパティ '{1}' がありません。</target>
@@ -150,6 +155,11 @@
       <trans-unit id="HostParametersBindSource_Name">
         <source>Host defined parameters</source>
         <target state="translated">ホスト定義パラメーター</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NuGetApiPackageManager_DownloadError_VulnerablePackage">
+        <source>Found package is vulnerable source: {0}</source>
+        <target state="translated">見つかったパッケージは脆弱なソースです: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="NuGetApiPackageManager_Error_FailedToLoadSource">
@@ -177,6 +187,11 @@
         <target state="translated">NuGet ソースが定義されていないか、有効になっていません。</target>
         <note />
       </trans-unit>
+      <trans-unit id="NuGetApiPackageManager_UpdateCheckError_VulnerablePackage">
+        <source>The checked package {0} is vulnerable.</source>
+        <target state="translated">チェックされたパッケージ {0} は脆弱です。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="NuGetApiPackageManager_Warning_FailedToDelete">
         <source>Failed to remove {0} after failed download. Remove the file manually if it exists.</source>
         <target state="translated">ダウンロードに失敗した {0} を削除できませんでした。ファイルが存在する場合は手動で削除してください。</target>
@@ -190,6 +205,11 @@
       <trans-unit id="NuGetApiPackageManager_Warning_FailedToLoadSource">
         <source>Failed to load NuGet source {0}: the source is not valid. It will be skipped in further processing.</source>
         <target state="translated">NuGet ソース {0} の読み込みに失敗しました: このソースが有効ではありません。今後の処理ではスキップされます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NuGetApiPackageManager_Warning_InsecureFeed">
+        <source>The NuGet sources {0} are insecure and will not be searched. If you want to include those sources for search, use --force.</source>
+        <target state="translated">NuGet ソース {0} は安全ではないため、検索されません。これらのソースを検索に含める場合は、--force を使用してください。</target>
         <note />
       </trans-unit>
       <trans-unit id="NuGetApiPackageManager_Warning_PackageNotFound">
@@ -212,65 +232,75 @@
         <target state="translated">ファイル {0} は既に存在します。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_DownloadFailed">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_DownloadFailed">
         <source>Failed to download {0} from {1}.</source>
         <target state="translated">{1} からの {0} のダウンロードに失敗しました。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_InstallGeneric">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_InstallGeneric">
         <source>Failed to install the package {0}.
 Details: {1}.</source>
         <target state="translated">パッケージ {0} をインストールできませんでした。
 詳細: {1}。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_InstallRequestNotSupported">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_InstallRequestNotSupported">
         <source>The install request {0} cannot be processed by installer {1}.</source>
         <target state="translated">インストール要求 {0} をインストーラー {1} で処理できません。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_InvalidPackage">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_InvalidPackage">
         <source>The NuGet package {0} is invalid.</source>
         <target state="translated">NuGet パッケージ {0} が無効です。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_InvalidSources">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_InvalidSources">
         <source>The configured NuGet sources are invalid: {0}.</source>
         <target state="translated">構成済みの NuGet ソースが無効です: {0}。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_InvalidSources_None">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_InvalidSources_None">
         <source>No NuGet sources are configured.</source>
         <target state="translated">構成された NuGet ソースがありません。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_OperationCancelled">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_OperationCancelled">
         <source>The operation was cancelled.</source>
         <target state="translated">処理が取り消されました。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_PackageNotFound">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_PackageNotFound">
         <source>{0} was not found in NuGet feeds {1}.</source>
         <target state="translated">{0} が NuGet フィード {1} で見つかりません。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_PackageNotSupported">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_PackageNotSupported">
         <source>The package {0} is not supported by installer {1}.</source>
         <target state="translated">このパッケージ {0}はインストーラー {1} でサポートされていません</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_UninstallGeneric">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_UninstallGeneric">
         <source>Failed to uninstall the package {0}.
 Details: {1}.</source>
         <target state="translated">パッケージ {0} をアンインストールできませんでした。
 詳細: {1}。</target>
         <note />
       </trans-unit>
-      <trans-unit id="NuGetInstaller_InstallResut_Error_UpdateCheckGeneric">
+      <trans-unit id="NuGetInstaller_InstallResult_Error_UpdateCheckGeneric">
         <source>Failed to check the update for the package {0}.
 Details: {1}.</source>
         <target state="translated">パッケージ {0} の更新プログラムを確認できませんでした。
 詳細: {1}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NuGetInstaller_InstallResult_Error_VulnerablePackage">
+        <source>The requested package {0} has vulnerabilities.</source>
+        <target state="translated">要求されたパッケージ {0} には脆弱性があります。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NuGetInstaller_UpdateCheck_Error_VulnerablePackage">
+        <source>The checked package {0} has vulnerabilities.</source>
+        <target state="translated">チェックされたパッケージ {0} には脆弱性があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="OSConstraint_Error_InvalidOSName">
@@ -354,10 +384,25 @@ Details: {0}</source>
         <target state="translated">重大な変更が検出されました。</target>
         <note />
       </trans-unit>
+      <trans-unit id="TemplateCreator_TemplateCreationResult_Error_InvalidTemplate">
+        <source>The template is invalid and cannot be instantiated.</source>
+        <target state="translated">テンプレートが無効であり、インスタンス化できません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TemplateCreator_TemplateCreationResult_Error_NoDefaultName">
+        <source>Failed to create template: the template name is not specified. Template configuration does not configure a default name that can be used when name is not specified. Specify the name for the template when instantiating or configure a default name in the template configuration.</source>
+        <target state="translated">テンプレートを作成できませんでした: テンプレート名が指定されていません。テンプレート構成では、名前が指定されていない場合に使用できる既定の名前は構成されません。インスタンス化時にテンプレートの名前を指定するか、テンプレート構成で既定の名前を構成します。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TemplateInfo_Warning_FailedToReadHostData">
         <source>Failed to load host data in {0} at {1}.</source>
         <target state="translated">{1} の {0} でホスト データを読み込めませんでした。</target>
         <note>{0} - path to template location, {1} relative path inside template location.</note>
+      </trans-unit>
+      <trans-unit id="TemplatePackageManager_Error_FailedToFindPackage">
+        <source>Failed to retrieve package with identifier '{0}'.</source>
+        <target state="translated">識別子 '{0}' のパッケージを取得できませんでした。</target>
+        <note />
       </trans-unit>
       <trans-unit id="TemplatePackageManager_Error_FailedToGetTemplatePackages">
         <source>Failed to retrieve template packages from provider '{0}'.
@@ -379,6 +424,66 @@ Template cache will be recreated on the next run.</source>
         <target state="translated">テンプレート キャッシュを保存できませんでした。詳細: {0}
 テンプレート キャッシュは次回の実行時に再作成されます。</target>
         <note>{0} should not end with period - period is a part of the format entry.</note>
+      </trans-unit>
+      <trans-unit id="TemplatePackageManager_Warning_DetectedTemplatesIdentityConflict">
+        <source>
+The following templates use the same identity '{0}':
+{1}
+The template from '{2}' will be used. To resolve this conflict, uninstall the conflicting template packages.</source>
+        <target state="translated">
+次のテンプレートは同じ ID '{0}' を使用しています:
+{1}
+'{2}' からのテンプレートが使用されます。この競合を解決するには、競合するテンプレート パッケージをアンインストールしてください。</target>
+        <note>
+The following templates use the same identity 'IDENTITY':
+  * 'TEMPLATE' from 'PACKAGE_ID'
+The template from 'PACKAGE_ID' will be used. To resolve this conflict, uninstall the conflicting template packages.
+    </note>
+      </trans-unit>
+      <trans-unit id="TemplatePackageManager_Warning_DetectedTemplatesIdentityConflict_Subentry">
+        <source>  {0} '{1}' from '{2}'</source>
+        <target state="translated">  '{2}' からの {0} '{1}'</target>
+        <note>* 'TEMPLATE' from 'PACKAGE_ID'</note>
+      </trans-unit>
+      <trans-unit id="Validation_Error_Header">
+        <source>The template {0} has the following validation errors:</source>
+        <target state="translated">テンプレート {0} には、次の検証エラーがあります:</target>
+        <note>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity)</note>
+      </trans-unit>
+      <trans-unit id="Validation_Info_Header">
+        <source>The template {0} has the following validation messages:</source>
+        <target state="translated">テンプレート {0} には、次の検証メッセージがあります:</target>
+        <note>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity)</note>
+      </trans-unit>
+      <trans-unit id="Validation_InvalidTemplate">
+        <source>Failed to load the template {0}: the template is not valid.</source>
+        <target state="translated">テンプレート {0} を読み込めませんでした: テンプレートが無効です。</target>
+        <note>{0} template info in format 'template name' (template.identity)</note>
+      </trans-unit>
+      <trans-unit id="Validation_InvalidTemplateLoc">
+        <source>Failed to load the '{0}' localization the template {1}: the localization file is not valid. The localization will be skipped.</source>
+        <target state="translated">'{0}' ローカリゼーションテンプレート {1} をインストールできませんでした: ローカライズ ファイルが無効です。ローカライズはスキップされます。</target>
+        <note>{1} template info in format 'template name' (template.identity), {0} is localization locale in "en-US" format</note>
+      </trans-unit>
+      <trans-unit id="Validation_LocError_Header">
+        <source>The template {0} has the following validation errors in '{1}' localization:</source>
+        <target state="translated">テンプレート {0} では、'{1}' ローカリゼーションで次の検証エラーが発生します。</target>
+        <note>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity), {1} is localization locale in "en-US" format</note>
+      </trans-unit>
+      <trans-unit id="Validation_LocInfo_Header">
+        <source>The template {0} has the following validation messages in '{1}' localization:</source>
+        <target state="translated">テンプレート {0} には、'{1}' ローカリゼーションで次の検証メッセージがあります:</target>
+        <note>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity), {1} is localization locale in "en-US" format</note>
+      </trans-unit>
+      <trans-unit id="Validation_LocWarning_Header">
+        <source>The template {0} has the following validation warnings in '{1}' localization:</source>
+        <target state="translated">テンプレート {0} には、'{1}' ローカリゼーションで次の検証警告があります。</target>
+        <note>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity), {1} is localization locale in "en-US" format</note>
+      </trans-unit>
+      <trans-unit id="Validation_Warning_Header">
+        <source>The template {0} has the following validation warnings:</source>
+        <target state="translated">テンプレート {0} には、次の検証警告があります:</target>
+        <note>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity)</note>
       </trans-unit>
       <trans-unit id="WorkloadConstraint_Error_MismatchedProviders">
         <source>Multiple 'IWorkloadsInfoProvider' components provided by host ({0}), therefore 'WorkloadConstraint' cannot be properly initialized.</source>

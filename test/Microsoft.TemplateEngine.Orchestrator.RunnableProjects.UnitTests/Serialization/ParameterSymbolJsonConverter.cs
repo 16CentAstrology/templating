@@ -1,9 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.ConfigModel;
 using Newtonsoft.Json;
@@ -13,7 +10,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Seria
     internal class ParameterSymbolJsonConverter : JsonConverter<ParameterSymbol>
     {
         //falls back to default de-serializer if not implemented
-        public override ParameterSymbol? ReadJson(JsonReader reader, Type objectType, ParameterSymbol? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+        public override ParameterSymbol ReadJson(JsonReader reader, Type objectType, ParameterSymbol? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
 
         public override void WriteJson(JsonWriter writer, ParameterSymbol? value, JsonSerializer serializer)
         {
@@ -117,9 +114,10 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Seria
             if (value.Choices != null)
             {
                 writer.WritePropertyName("choices");
-                writer.WriteStartObject();
+                writer.WriteStartArray();
                 foreach (KeyValuePair<string, ParameterChoice> choice in value.Choices)
                 {
+                    writer.WriteStartObject();
                     writer.WritePropertyName("choice");
                     writer.WriteValue(choice.Key);
                     if (!string.IsNullOrEmpty(choice.Value.DisplayName))
@@ -133,8 +131,9 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Seria
                         writer.WritePropertyName("description");
                         writer.WriteValue(choice.Value.Description);
                     }
+                    writer.WriteEndObject();
                 }
-                writer.WriteEndObject();
+                writer.WriteEndArray();
             }
 
             writer.WriteEndObject();

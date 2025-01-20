@@ -1,13 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.TemplateFiltering;
@@ -216,6 +210,38 @@ namespace Microsoft.TemplateEngine.Edge.Settings
             return allTemplates.Where(t => t.MountPointUri == templatePackage.MountPointUri);
         }
 
+        /// <summary>
+        /// Returns managed template package <see cref="IManagedTemplatePackage"/> matching <paramref name="packageIdentifier"/> and containing templates <see cref="ITemplateInfo"/>.
+        /// </summary>
+        /// <param name="packageIdentifier">The template package identifier.</param>
+        /// <param name="packageVersion">The template package version, if null package version is not checked.</param>
+        /// <param name="cancellationToken">A cancellation token to cancel the asynchronous operation.</param>
+        /// <returns>The managed template package and the containing templates.</returns>
+        /// <exception cref="InvalidOperationException"> Throws an exception when package <paramref name="packageIdentifier"/>.</exception>
+        public async Task<(IManagedTemplatePackage? Package, IEnumerable<ITemplateInfo>? Templates)> GetManagedTemplatePackageAsync(string packageIdentifier, string? packageVersion = null, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var templatePackages = await GetManagedTemplatePackagesAsync(false, cancellationToken).ConfigureAwait(false);
+            var foundPackage = templatePackages
+                .FirstOrDefault(tp =>
+                {
+                    if (tp?.Identifier == packageIdentifier)
+                    {
+                        return string.IsNullOrWhiteSpace(packageVersion) || tp.Version == packageVersion;
+                    }
+                    return false;
+                });
+
+            if (foundPackage != null)
+            {
+                var templates = await GetTemplatesAsync(foundPackage, cancellationToken).ConfigureAwait(false);
+
+                return (foundPackage, templates);
+            }
+
+            throw new InvalidOperationException(string.Format(LocalizableStrings.TemplatePackageManager_Error_FailedToFindPackage, packageIdentifier));
+        }
+
         private void EnsureProvidersLoaded()
         {
             if (_cachedSources != null)
@@ -245,17 +271,17 @@ namespace Microsoft.TemplateEngine.Edge.Settings
             {
                 try
                 {
-                    _userTemplateCache = cache = new TemplateCache(_environmentSettings.Host.FileSystem.ReadObject(_paths.TemplateCacheFile), _logger);
+                    _userTemplateCache = cache = new TemplateCache(_environmentSettings.Host.FileSystem.ReadObject(_paths.TemplateCacheFile));
                 }
                 catch (FileNotFoundException)
                 {
                     // Don't log this, it's expected, we just don't want to do File.Exists...
-                    cache = new TemplateCache(null, _logger);
+                    cache = new TemplateCache(null);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogDebug(ex, "Failed to load templatecache.json.");
-                    cache = new TemplateCache(null, _logger);
+                    cache = new TemplateCache(null);
                 }
             }
 
@@ -316,11 +342,11 @@ namespace Microsoft.TemplateEngine.Edge.Settings
             }
 
             var scanResults = new ScanResult?[allTemplatePackages.Count];
-            Parallel.For(0, allTemplatePackages.Count, (int index) =>
+            Parallel.For(0, allTemplatePackages.Count, async (int index) =>
             {
                 try
                 {
-                    var scanResult = _installScanner.Scan(allTemplatePackages[index].MountPointUri);
+                    var scanResult = await _installScanner.ScanAsync(allTemplatePackages[index].MountPointUri, cancellationToken).ConfigureAwait(false);
                     scanResults[index] = scanResult;
                 }
                 catch (Exception ex)
@@ -330,7 +356,7 @@ namespace Microsoft.TemplateEngine.Edge.Settings
                 }
             });
             cancellationToken.ThrowIfCancellationRequested();
-            cache = new TemplateCache(scanResults, mountPoints, _logger);
+            cache = new TemplateCache(allTemplatePackages, scanResults, mountPoints, _environmentSettings);
             foreach (var scanResult in scanResults)
             {
                 scanResult?.Dispose();

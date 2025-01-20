@@ -1,17 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Mount;
 using Microsoft.TemplateEngine.Abstractions.Parameters;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.ConfigModel;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Serialization;
 using Microsoft.TemplateEngine.TestHelper;
-using Xunit;
 
 namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.TemplateConfigTests
 {
@@ -21,7 +16,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
 
         public SourceConfigTests(EnvironmentSettingsHelper environmentSettingsHelper)
         {
-            _engineEnvironmentSettings = environmentSettingsHelper.CreateEnvironment(hostIdentifier: this.GetType().Name, virtualize: false);
+            _engineEnvironmentSettings = environmentSettingsHelper.CreateEnvironment(hostIdentifier: GetType().Name, virtualize: false);
         }
 
         [Fact]
@@ -66,10 +61,10 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
             Assert.NotNull(templateConfigFile);
 
-            ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
+            using ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
             ParameterSetData parameters = new(template);
 
-            ICreationResult result = await (generator as IGenerator).CreateAsync(_engineEnvironmentSettings, template, parameters, targetDir, default).ConfigureAwait(false);
+            await (generator as IGenerator).CreateAsync(_engineEnvironmentSettings, template, parameters, targetDir, default);
             Assert.True(_engineEnvironmentSettings.Host.FileSystem.FileExists(Path.Combine(targetDir, "core.config")));
             Assert.False(_engineEnvironmentSettings.Host.FileSystem.FileExists(Path.Combine(targetDir, "full.config")));
         }
@@ -105,7 +100,6 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 { "something.txt", null },
                 { "copy.me", null }
             };
-
             _engineEnvironmentSettings.WriteTemplateSource(sourceBasePath, templateSourceFiles);
             string targetDir = _engineEnvironmentSettings.GetTempVirtualizedPath();
 
@@ -115,14 +109,13 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
             Assert.NotNull(templateConfigFile);
 
-            ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
+            using ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
             ParameterSetData parameters = new(template);
 
-            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default).ConfigureAwait(false);
-            IEnumerable<IFileChange2> changes = result.FileChanges.Cast<IFileChange2>();
+            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default);
             Assert.All(result.FileChanges.Cast<IFileChange2>(), c => c.SourceRelativePath.StartsWith("./"));
 
-            Assert.Equal(1, result.FileChanges.Count);
+            Assert.Single(result.FileChanges);
 
             Assert.Equal(ChangeKind.Create, result.FileChanges.Single().ChangeKind);
             Assert.True(string.Equals(result.FileChanges.Single().TargetRelativePath, "./something.txt"), "didn't copy the correct file");
@@ -166,14 +159,13 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
             Assert.NotNull(templateConfigFile);
 
-            ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
+            using ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
             ParameterSetData parameters = new(template);
 
-            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default).ConfigureAwait(false);
-            IEnumerable<IFileChange2> changes = result.FileChanges.Cast<IFileChange2>();
+            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default);
             Assert.All(result.FileChanges.Cast<IFileChange2>(), c => c.SourceRelativePath.StartsWith("./"));
 
-            Assert.Equal(1, result.FileChanges.Count);
+            Assert.Single(result.FileChanges);
             Assert.Equal(ChangeKind.Create, result.FileChanges.Single().ChangeKind);
             Assert.True(string.Equals(result.FileChanges.Single().TargetRelativePath, "./copy.me"), "didn't copy the correct file");
         }
@@ -216,14 +208,13 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
             Assert.NotNull(templateConfigFile);
 
-            ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
+            using ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
             ParameterSetData parameters = new(template);
 
-            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default).ConfigureAwait(false);
-            IEnumerable<IFileChange2> changes = result.FileChanges.Cast<IFileChange2>();
+            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default);
             Assert.All(result.FileChanges.Cast<IFileChange2>(), c => c.SourceRelativePath.StartsWith("./"));
 
-            Assert.Equal(1, result.FileChanges.Count);
+            Assert.Single(result.FileChanges);
             Assert.Equal(ChangeKind.Create, result.FileChanges.Single().ChangeKind);
             Assert.True(string.Equals(result.FileChanges.Single().TargetRelativePath, "./copy.me"), "didn't copy the correct file");
         }
@@ -262,7 +253,6 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 { "include.xyz", null },
                 { "exclude.xyz", null }
             };
-
             _engineEnvironmentSettings.WriteTemplateSource(sourceBasePath, templateSourceFiles);
 
             string targetDir = _engineEnvironmentSettings.GetTempVirtualizedPath();
@@ -272,14 +262,13 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
             Assert.NotNull(templateConfigFile);
 
-            ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
+            using ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
             ParameterSetData parameters = new(template);
 
-            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default).ConfigureAwait(false);
-            IEnumerable<IFileChange2> changes = result.FileChanges.Cast<IFileChange2>();
+            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default);
             Assert.All(result.FileChanges.Cast<IFileChange2>(), c => c.SourceRelativePath.StartsWith("./"));
 
-            Assert.Equal(1, result.FileChanges.Count);
+            Assert.Single(result.FileChanges);
             Assert.Equal(ChangeKind.Create, result.FileChanges.Single().ChangeKind);
             Assert.True(string.Equals(result.FileChanges.Single().TargetRelativePath, "./include.xyz"), "include modifier didn't properly override exclude modifier");
         }
@@ -319,7 +308,6 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 { "include.xyz", null },
                 { "exclude.xyz", null }
             };
-
             _engineEnvironmentSettings.WriteTemplateSource(sourceBasePath, templateSourceFiles);
 
             string targetDir = _engineEnvironmentSettings.GetTempVirtualizedPath();
@@ -329,10 +317,10 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
             Assert.NotNull(templateConfigFile);
 
-            ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
+            using ITemplate template = new RunnableProjectConfig(_engineEnvironmentSettings, generator, templateConfigFile);
             ParameterSetData parameters = new(template);
 
-            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default).ConfigureAwait(false);
+            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(_engineEnvironmentSettings, template, parameters, targetDir, default);
             IEnumerable<IFileChange2> changes = result.FileChanges.Cast<IFileChange2>();
             Assert.All(result.FileChanges.Cast<IFileChange2>(), c => c.SourceRelativePath.StartsWith("./"));
 

@@ -82,7 +82,7 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.Results
         public IReadOnlyList<string> Classifications { get; private set; }
 
         [JsonProperty]
-        public string? DefaultName => string.Empty;
+        public string DefaultName => string.Empty;
 
         [JsonProperty]
         public string? Description { get; private set; }
@@ -101,6 +101,9 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.Results
 
         [JsonProperty]
         public string Name { get; private set; }
+
+        [JsonIgnore]
+        public bool PreferDefaultName { get; }
 
         [JsonProperty]
         public string ShortName
@@ -136,13 +139,13 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.Results
         public Guid LocaleConfigMountPointId => Guid.Empty;
 
         [JsonProperty]
-        public string? LocaleConfigPlace => string.Empty;
+        public string LocaleConfigPlace => string.Empty;
 
         [JsonProperty]
         public Guid HostConfigMountPointId => Guid.Empty;
 
         [JsonProperty]
-        public string? HostConfigPlace => string.Empty;
+        public string HostConfigPlace => string.Empty;
 
         [JsonProperty]
         public string? ThirdPartyNotices { get; private set; }
@@ -157,10 +160,10 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.Results
         public DateTime? ConfigTimestampUtc { get; private set; }
 
         [JsonIgnore]
-        public IReadOnlyDictionary<string, string> TagsCollection { get; private set; }
+        public IReadOnlyDictionary<string, string> TagsCollection { get; }
 
         [JsonIgnore]
-        public IParameterDefinitionSet ParameterDefinitions { get; private set; }
+        public IParameterDefinitionSet ParameterDefinitions { get; }
 
         [JsonIgnore]
         [Obsolete("Use ParameterDefinitionSet instead.")]
@@ -176,10 +179,10 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.Results
         public IReadOnlyDictionary<string, ICacheParameter> CacheParameters { get; private set; } = new Dictionary<string, ICacheParameter>();
 
         [JsonIgnore]
-        public IReadOnlyList<Guid> PostActions { get; private set; }
+        public IReadOnlyList<Guid> PostActions { get; }
 
         [JsonIgnore]
-        IReadOnlyList<TemplateConstraintInfo> ITemplateInfo.Constraints => throw new NotImplementedException();
+        IReadOnlyList<TemplateConstraintInfo> ITemplateMetadata.Constraints => throw new NotImplementedException();
 
         // ShortName should get deserialized when it exists, for backwards compat.
         // But moving forward, ShortNameList should be the definitive source.
@@ -242,7 +245,7 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.Results
             public string? DefaultIfOptionWithoutValue { get; }
 
             [JsonIgnore]
-            public string? DisplayName => throw new NotImplementedException();
+            public string DisplayName => throw new NotImplementedException();
         }
     }
 }

@@ -29,7 +29,7 @@ The key packages are:
 
 `dotnet new` CLI is now located in [dotnet/sdk](https://github.com/dotnet/sdk/tree/main/src/Cli/Microsoft.TemplateEngine.Cli) repo.
 
-The issues for `dotnet new` CLI UX should be opened in the that repository.
+The issues for `dotnet new` CLI UX should be opened in that repository.
 
 ### Template Content Repositories
 
@@ -41,6 +41,7 @@ The templates are located in the following repositories:
 |Common project and item templates|[dotnet/sdk](https://github.com/dotnet/sdk)|
 |ASP.NET and Blazor templates|[dotnet/aspnetcore](https://github.com/dotnet/aspnetcore)|
 |ASP.NET Single Page Application templates| [dotnet/spa-templates](https://github.com/dotnet/spa-templates)|
+|Aspire templates|[dotnet/aspire](https://github.com/dotnet/aspire)|
 |WPF templates|[dotnet/wpf](https://github.com/dotnet/wpf)|
 |Windows Forms templates|[dotnet/winforms](https://github.com/dotnet/winforms)|
 |Test templates|[dotnet/test-templates](https://github.com/dotnet/test-templates)|
@@ -57,6 +58,11 @@ The starting point tutorial on how to create new templates is available in [Micr
 More advanced information can be found in the [Wiki](https://github.com/dotnet/templating/wiki) or [docs](https://github.com/dotnet/templating/tree/main/docs) folder in the repo.
 
 Still have a question about template authoring? Do not hesitate to [open new discussion](https://github.com/dotnet/templating/discussions) in GitHub Template Authoring.
+
+### Authoring Tools
+
+Besides the actual implementation of .NET Template Engine, the repo contains various tools that help to author the templates.
+They are not shipped together with .NET SDK, but available on NuGet.org. More information can be found [here](docs/authoring-tools/Authoring-Tools.md)
 
 ### Template Samples
 
@@ -77,11 +83,11 @@ See our [help wanted](https://github.com/dotnet/templating/issues?q=is%3Aopen+is
 We have a number of features where we are actively looking for the feedback. They are marked with [`gathering-feedback` label](https://github.com/dotnet/templating/issues?q=is%3Aissue+is%3Aopen+label%3Agathering-feedback). 
 If you think they are useful for your templates, please let us know in comments or by reacting on those.
 
-Check out our [contributing](Contributing.md) page to learn more details.
+Check out our [contributing](CONTRIBUTING.md) page to learn more details.
 
 ## How to build, run & debug
 
-Check out our [contributing](Contributing.md#working-with-the-repo) page to learn how you can build, run and debug.
+Check out our [contributing](CONTRIBUTING.md#working-with-the-repo) page to learn how you can build, run and debug.
 
 ## Trademarks
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft’s Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party’s policies.

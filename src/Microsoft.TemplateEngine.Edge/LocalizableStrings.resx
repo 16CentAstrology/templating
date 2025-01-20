@@ -135,7 +135,7 @@
     <value>Parameter conditions contain cyclic dependency: [{0}]. With current values of parameters it's possible to deterministically evaluate parameters - so proceeding further. However template should be reviewed as instantiation with different parameters can lead to error.</value>
     <comment>{0} is the dependency chain</comment>
   </data>
-  <data name="Constaint_Error_ArgumentHasEmptyString" xml:space="preserve">
+  <data name="Constraint_Error_ArgumentHasEmptyString" xml:space="preserve">
     <value>'{0}' should not contain empty items</value>
     <comment>{0} is JSON configuration for constraint</comment>
   </data>
@@ -223,6 +223,12 @@
   <data name="HostParametersBindSource_Name" xml:space="preserve">
     <value>Host defined parameters</value>
   </data>
+  <data name="NuGetApiPackageManager_UpdateCheckError_VulnerablePackage" xml:space="preserve">
+    <value>The checked package {0} is vulnerable.</value>
+  </data>
+  <data name="NuGetApiPackageManager_DownloadError_VulnerablePackage" xml:space="preserve">
+    <value>Found package is vulnerable source: {0}</value>
+  </data>
   <data name="NuGetApiPackageManager_Error_FailedToLoadSource" xml:space="preserve">
     <value>Failed to load the NuGet source {0}.</value>
   </data>
@@ -237,6 +243,9 @@
   </data>
   <data name="NuGetApiPackageManager_Error_NoSources" xml:space="preserve">
     <value>No NuGet sources are defined or enabled.</value>
+  </data>
+  <data name="NuGetApiPackageManager_Warning_InsecureFeed" xml:space="preserve">
+    <value>The NuGet sources {0} are insecure and will not be searched. If you want to include those sources for search, use --force.</value>
   </data>
   <data name="NuGetApiPackageManager_Warning_FailedToDelete" xml:space="preserve">
     <value>Failed to remove {0} after failed download. Remove the file manually if it exists.</value>
@@ -259,39 +268,45 @@
   <data name="NuGetInstaller_Error_FileAlreadyExists" xml:space="preserve">
     <value>File {0} already exists.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_DownloadFailed" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_DownloadFailed" xml:space="preserve">
     <value>Failed to download {0} from {1}.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_InstallGeneric" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_InstallGeneric" xml:space="preserve">
     <value>Failed to install the package {0}.
 Details: {1}.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_InstallRequestNotSupported" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_InstallRequestNotSupported" xml:space="preserve">
     <value>The install request {0} cannot be processed by installer {1}.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_InvalidPackage" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_InvalidPackage" xml:space="preserve">
     <value>The NuGet package {0} is invalid.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_InvalidSources" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_VulnerablePackage" xml:space="preserve">
+    <value>The requested package {0} has vulnerabilities.</value>
+  </data>
+  <data name="NuGetInstaller_InstallResult_Error_InvalidSources" xml:space="preserve">
     <value>The configured NuGet sources are invalid: {0}.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_InvalidSources_None" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_InvalidSources_None" xml:space="preserve">
     <value>No NuGet sources are configured.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_OperationCancelled" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_OperationCancelled" xml:space="preserve">
     <value>The operation was cancelled.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_PackageNotFound" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_PackageNotFound" xml:space="preserve">
     <value>{0} was not found in NuGet feeds {1}.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_PackageNotSupported" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_PackageNotSupported" xml:space="preserve">
     <value>The package {0} is not supported by installer {1}.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_UninstallGeneric" xml:space="preserve">
+  <data name="NuGetInstaller_InstallResult_Error_UninstallGeneric" xml:space="preserve">
     <value>Failed to uninstall the package {0}.
 Details: {1}.</value>
   </data>
-  <data name="NuGetInstaller_InstallResut_Error_UpdateCheckGeneric" xml:space="preserve">
+  <data name="NuGetInstaller_UpdateCheck_Error_VulnerablePackage" xml:space="preserve">
+    <value>The checked package {0} has vulnerabilities.</value>
+  </data>
+  <data name="NuGetInstaller_InstallResult_Error_UpdateCheckGeneric" xml:space="preserve">
     <value>Failed to check the update for the package {0}.
 Details: {1}.</value>
   </data>
@@ -310,6 +325,38 @@ Details: {1}.</value>
   </data>
   <data name="Scanner_Error_TemplatePackageLocationIsNotSupported" xml:space="preserve">
     <value>Template package location {0} is not supported, or doesn't exist.</value>
+  </data>
+  <data name="Validation_Error_Header" xml:space="preserve">
+    <value>The template {0} has the following validation errors:</value>
+    <comment>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity)</comment>
+  </data>
+  <data name="Validation_Info_Header" xml:space="preserve">
+    <value>The template {0} has the following validation messages:</value>
+    <comment>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity)</comment>
+  </data>
+  <data name="Validation_InvalidTemplate" xml:space="preserve">
+    <value>Failed to load the template {0}: the template is not valid.</value>
+    <comment>{0} template info in format 'template name' (template.identity)</comment>
+  </data>
+  <data name="Validation_InvalidTemplateLoc" xml:space="preserve">
+    <value>Failed to load the '{0}' localization the template {1}: the localization file is not valid. The localization will be skipped.</value>
+    <comment>{1} template info in format 'template name' (template.identity), {0} is localization locale in "en-US" format</comment>
+  </data>
+  <data name="Validation_LocError_Header" xml:space="preserve">
+    <value>The template {0} has the following validation errors in '{1}' localization:</value>
+    <comment>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity), {1} is localization locale in "en-US" format</comment>
+  </data>
+  <data name="Validation_LocInfo_Header" xml:space="preserve">
+    <value>The template {0} has the following validation messages in '{1}' localization:</value>
+    <comment>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity), {1} is localization locale in "en-US" format</comment>
+  </data>
+  <data name="Validation_LocWarning_Header" xml:space="preserve">
+    <value>The template {0} has the following validation warnings in '{1}' localization:</value>
+    <comment>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity), {1} is localization locale in "en-US" format</comment>
+  </data>
+  <data name="Validation_Warning_Header" xml:space="preserve">
+    <value>The template {0} has the following validation warnings:</value>
+    <comment>This is a header for the list of issues found for the template, and followed by the list of issues (from new line). {0} template info in format 'template name' (template.identity)</comment>
   </data>
   <data name="SdkConstraint_Error_InvalidVersion" xml:space="preserve">
     <value>'{0}' is not a valid semver version.</value>
@@ -351,6 +398,9 @@ Details: {1}.</value>
     <value>Failed to create template.
 Details: {0}</value>
   </data>
+  <data name="TemplateCreator_TemplateCreationResult_Error_NoDefaultName" xml:space="preserve">
+    <value>Failed to create template: the template name is not specified. Template configuration does not configure a default name that can be used when name is not specified. Specify the name for the template when instantiating or configure a default name in the template configuration.</value>
+  </data>
   <data name="TemplateCreator_TemplateCreationResult_Error_DestructiveChanges" xml:space="preserve">
     <value>Destructive changes detected.</value>
   </data>
@@ -362,6 +412,9 @@ Details: {0}</value>
     <value>Failed to retrieve template packages from provider '{0}'.
 Details: {1}</value>
     <comment>{0} - provider name (not localized). Last line should not end with a period - period is already included in {1}.</comment>
+  </data>
+  <data name="TemplatePackageManager_Error_FailedToFindPackage" xml:space="preserve">
+    <value>Failed to retrieve package with identifier '{0}'.</value>
   </data>
   <data name="TemplatePackageManager_Error_FailedToScan" xml:space="preserve">
     <value>Failed to scan {0}.
@@ -391,5 +444,26 @@ Template cache will be recreated on the next run.</value>
   <data name="WorkloadConstraint_Warning_DuplicateWorkloads" xml:space="preserve">
     <value>'IWorkloadsInfoProvider' component provided by host provided some duplicated workloads (duplicates: {0}). Duplicates will be skipped.</value>
     <comment>{0} is the list of duplicates</comment>
+  </data>
+  <data name="TemplatePackageManager_Warning_DetectedTemplatesIdentityConflict" xml:space="preserve">
+    <value>
+The following templates use the same identity '{0}':
+{1}
+The template from '{2}' will be used. To resolve this conflict, uninstall the conflicting template packages.</value>
+    <comment>
+The following templates use the same identity 'IDENTITY':
+  * 'TEMPLATE' from 'PACKAGE_ID'
+The template from 'PACKAGE_ID' will be used. To resolve this conflict, uninstall the conflicting template packages.
+    </comment>
+  </data>
+  <data name="TemplatePackageManager_Warning_DetectedTemplatesIdentityConflict_Subentry" xml:space="preserve">
+    <value>  {0} '{1}' from '{2}'</value>
+    <comment>* 'TEMPLATE' from 'PACKAGE_ID'</comment>
+  </data>
+  <data name="GlobalSettings_Error_CorruptedSettings" xml:space="preserve">
+    <value>Failed to read installed template packages list at {0}. It might be due to the file is corrupted. Please review this file manually and fix the errors in JSON structure, or remove the file to clear up the list of list installed packages and reinstall them again. Details of the error: {1}.</value>
+  </data>
+  <data name="TemplateCreator_TemplateCreationResult_Error_InvalidTemplate" xml:space="preserve">
+    <value>The template is invalid and cannot be instantiated.</value>
   </data>
 </root>

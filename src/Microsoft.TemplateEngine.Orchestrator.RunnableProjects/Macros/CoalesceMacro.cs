@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Parameters;
@@ -55,8 +54,10 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Macros
                 return;
             }
             environmentSettings.Host.Logger.LogDebug("[{macro}]: Variable '{var}' was not assigned, neither source nor fallback variable was found.", nameof(CoalesceMacro), config.VariableName);
+            config.MacroErrors.Add(string.Format(LocalizableStrings.CoalesceMacro_Exception_MissedVariables, nameof(CoalesceMacro), config.VariableName));
         }
 
-        protected override CoalesceMacroConfig CreateConfig(IEngineEnvironmentSettings environmentSettings, IGeneratedSymbolConfig deferredConfig) => new(this, deferredConfig);
+        public override CoalesceMacroConfig CreateConfig(IEngineEnvironmentSettings environmentSettings, IGeneratedSymbolConfig deferredConfig)
+            => new CoalesceMacroConfig(this, deferredConfig);
     }
 }

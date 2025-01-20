@@ -11,39 +11,36 @@ namespace Microsoft.TemplateEngine.Authoring.CLI.Commands
     {
         private const string CommandName = "export";
 
-        private readonly Argument<IEnumerable<string>> _templatePathArgument = new("template-path")
+        private readonly CliArgument<IEnumerable<string>> _templatePathArgument = new("template-path")
         {
             Arity = ArgumentArity.OneOrMore,
             Description = LocalizableStrings.command_export_help_templatePath_description,
         };
 
-        private readonly Option<IEnumerable<string>> _languageOption = new("-l")
+        private readonly CliOption<IEnumerable<string>> _languageOption = new("--language", "-l")
         {
-            Name = "--language",
             Description = LocalizableStrings.command_export_help_language_description,
             Arity = ArgumentArity.OneOrMore,
             AllowMultipleArgumentsPerToken = true,
         };
 
-        private readonly Option<bool> _recursiveOption = new("-r")
+        private readonly CliOption<bool> _recursiveOption = new("recursive", new[] { "--recursive", "-r" })
         {
-            Name = "--recursive",
             Description = LocalizableStrings.command_export_help_recursive_description,
         };
 
-        private readonly Option<bool> _dryRunOption = new("-d")
+        private readonly CliOption<bool> _dryRunOption = new("--dry-run", "-d")
         {
-            Name = "--dry-run",
             Description = LocalizableStrings.command_export_help_dryrun_description,
         };
 
         public ExportCommand()
             : base(CommandName, LocalizableStrings.command_export_help_description)
         {
-            AddArgument(_templatePathArgument);
-            AddOption(_recursiveOption);
-            AddOption(_languageOption);
-            AddOption(_dryRunOption);
+            Arguments.Add(_templatePathArgument);
+            Options.Add(_recursiveOption);
+            Options.Add(_languageOption);
+            Options.Add(_dryRunOption);
         }
 
         protected internal override ExportCommandArgs ParseContext(ParseResult parseResult)
@@ -145,6 +142,7 @@ namespace Microsoft.TemplateEngine.Authoring.CLI.Commands
         /// ".template.config/template.json" files under the given directory is returned.</item>
         /// </list>
         /// </summary>
+        /// <param name="path"></param>
         /// <param name="searchSubdirectories">Indicates weather the subdirectories should be searched
         /// in the case that <paramref name="path"/> points to a directory. This parameter has no effect
         /// if <paramref name="path"/> points to a file.</param>

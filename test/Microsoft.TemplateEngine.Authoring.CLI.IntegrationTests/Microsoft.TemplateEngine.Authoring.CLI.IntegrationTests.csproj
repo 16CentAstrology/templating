@@ -1,9 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <TargetFramework>$(NETCoreTargetFramework)</TargetFramework>
-    <IsPackable>false</IsPackable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,5 +13,11 @@
   <ItemGroup>
     <Compile Include="..\Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <Compile Remove="Snapshots\**\*" />
+    <Content Include="Snapshots\**\*" />
+    <None Include="Snapshots\**\*" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+
 </Project>

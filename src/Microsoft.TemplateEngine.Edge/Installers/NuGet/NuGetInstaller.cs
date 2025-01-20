@@ -1,17 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Installer;
 using Microsoft.TemplateEngine.Abstractions.TemplatePackage;
 using NuGet.Packaging;
+using static Microsoft.TemplateEngine.Edge.Installers.NuGet.NuGetApiPackageManager;
 
 namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
 {
@@ -110,7 +105,10 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
             return NuGetManagedTemplatePackage.Deserialize(_environmentSettings, this, provider, data.MountPointUri, data.Details);
         }
 
-        public async Task<IReadOnlyList<CheckUpdateResult>> GetLatestVersionAsync(IEnumerable<IManagedTemplatePackage> packages, IManagedTemplatePackageProvider provider, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<CheckUpdateResult>> GetLatestVersionAsync(
+            IEnumerable<IManagedTemplatePackage> packages,
+            IManagedTemplatePackageProvider provider,
+            CancellationToken cancellationToken)
         {
             _ = packages ?? throw new ArgumentNullException(nameof(packages));
             return await Task.WhenAll(packages.Select(async package =>
@@ -119,33 +117,61 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                     {
                         try
                         {
-                            (string latestVersion, bool isLatestVersion) = await _updateChecker.GetLatestVersionAsync(nugetPackage.Identifier, nugetPackage.Version, nugetPackage.NuGetSource, cancellationToken).ConfigureAwait(false);
-                            return CheckUpdateResult.CreateSuccess(package, latestVersion, isLatestVersion);
+                            (string version, bool isLatestVersion, NugetPackageMetadata packageMetadata) = await _updateChecker.GetLatestVersionAsync(
+                                nugetPackage.Identifier,
+                                nugetPackage.Version,
+                                nugetPackage.NuGetSource,
+                                cancellationToken).ConfigureAwait(false);
+
+                            if (packageMetadata.Vulnerabilities != null && packageMetadata.Vulnerabilities.Any())
+                            {
+                                throw new VulnerablePackageException(
+                                    string.Format(LocalizableStrings.NuGetApiPackageManager_UpdateCheckError_VulnerablePackage, nugetPackage.Identifier),
+                                    nugetPackage.Identifier,
+                                    nugetPackage?.Version ?? string.Empty,
+                                    packageMetadata.Vulnerabilities);
+                            }
+
+                            nugetPackage.Owners = packageMetadata.Owners;
+                            nugetPackage.Reserved = packageMetadata.PrefixReserved.ToString();
+
+                            return CheckUpdateResult.CreateSuccess(nugetPackage, version, isLatestVersion);
                         }
                         catch (PackageNotFoundException e)
                         {
                             return CheckUpdateResult.CreateFailure(
                                 package,
                                 InstallerErrorCode.PackageNotFound,
-                                string.Format(LocalizableStrings.NuGetInstaller_Error_FailedToReadPackage, e.PackageIdentifier, string.Join(", ", e.SourcesList)));
+                                string.Format(LocalizableStrings.NuGetInstaller_Error_FailedToReadPackage, e.PackageIdentifier, string.Join(", ", e.SourcesList)),
+                                []);
                         }
                         catch (InvalidNuGetSourceException e)
                         {
                             string message = e.SourcesList == null || !e.SourcesList.Any()
-                                ? LocalizableStrings.NuGetInstaller_InstallResut_Error_InvalidSources_None
-                                : string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_InvalidSources, string.Join(", ", e.SourcesList));
+                                ? LocalizableStrings.NuGetInstaller_InstallResult_Error_InvalidSources_None
+                                : string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_InvalidSources, string.Join(", ", e.SourcesList));
 
                             return CheckUpdateResult.CreateFailure(
                                 package,
                                 InstallerErrorCode.InvalidSource,
-                                message);
+                                message,
+                                []);
                         }
                         catch (OperationCanceledException)
                         {
                             return CheckUpdateResult.CreateFailure(
                                 package,
                                 InstallerErrorCode.GenericError,
-                                LocalizableStrings.NuGetInstaller_InstallResut_Error_OperationCancelled);
+                                LocalizableStrings.NuGetInstaller_InstallResult_Error_OperationCancelled,
+                                []);
+                        }
+                        catch (VulnerablePackageException e)
+                        {
+                            return CheckUpdateResult.CreateFailure(
+                                package,
+                                InstallerErrorCode.VulnerablePackage,
+                                string.Format(LocalizableStrings.NuGetInstaller_UpdateCheck_Error_VulnerablePackage, nugetPackage.Identifier),
+                                e.Vulnerabilities);
                         }
                         catch (Exception e)
                         {
@@ -153,7 +179,8 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                             return CheckUpdateResult.CreateFailure(
                                 package,
                                 InstallerErrorCode.GenericError,
-                                string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_UpdateCheckGeneric, package.DisplayName, e.Message));
+                                string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_UpdateCheckGeneric, package.DisplayName, e.Message),
+                                []);
                         }
                     }
                     else
@@ -161,7 +188,8 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                         return CheckUpdateResult.CreateFailure(
                             package,
                             InstallerErrorCode.UnsupportedRequest,
-                            string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_PackageNotSupported, package.DisplayName, Factory.Name));
+                            string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_PackageNotSupported, package.DisplayName, Factory.Name),
+                            []);
                     }
                 })).ConfigureAwait(false);
         }
@@ -176,7 +204,8 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                 return InstallResult.CreateFailure(
                     installRequest,
                     InstallerErrorCode.UnsupportedRequest,
-                    string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_PackageNotSupported, installRequest.DisplayName, Factory.Name));
+                    string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_PackageNotSupported, installRequest.DisplayName, Factory.Name),
+                    []);
             }
 
             try
@@ -189,7 +218,7 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                 }
                 else
                 {
-                    string[] additionalNuGetSources = Array.Empty<string>();
+                    string[] additionalNuGetSources = [];
                     if (installRequest.Details != null && installRequest.Details.TryGetValue(InstallerConstants.NuGetSourcesKey, out string nugetSources))
                     {
                         additionalNuGetSources = nugetSources.Split(InstallerConstants.NuGetSourcesSeparator);
@@ -213,12 +242,14 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                     nuGetPackageInfo.PackageIdentifier)
                 {
                     Author = nuGetPackageInfo.Author,
+                    Owners = nuGetPackageInfo.Owners,
+                    Reserved = nuGetPackageInfo.Reserved.ToString(),
                     NuGetSource = nuGetPackageInfo.NuGetSource,
                     Version = nuGetPackageInfo.PackageVersion.ToString(),
                     IsLocalPackage = isLocalPackage
                 };
 
-                return InstallResult.CreateSuccess(installRequest, package);
+                return InstallResult.CreateSuccess(installRequest, package, nuGetPackageInfo.PackageVulnerabilities);
             }
             catch (DownloadException e)
             {
@@ -229,39 +260,52 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                 return InstallResult.CreateFailure(
                     installRequest,
                     InstallerErrorCode.DownloadFailed,
-                    string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_DownloadFailed, installRequest.DisplayName, packageLocation));
+                    string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_DownloadFailed, installRequest.DisplayName, packageLocation),
+                    []);
             }
             catch (PackageNotFoundException e)
             {
                 return InstallResult.CreateFailure(
                     installRequest,
                     InstallerErrorCode.PackageNotFound,
-                    string.Format(LocalizableStrings.NuGetInstaller_Error_FailedToReadPackage, e.PackageIdentifier, string.Join(", ", e.SourcesList)));
+                    string.Format(LocalizableStrings.NuGetInstaller_Error_FailedToReadPackage, e.PackageIdentifier, string.Join(", ", e.SourcesList)),
+                    []);
             }
             catch (InvalidNuGetSourceException e)
             {
                 string message = e.SourcesList == null || !e.SourcesList.Any()
-                    ? LocalizableStrings.NuGetInstaller_InstallResut_Error_InvalidSources_None
-                    : string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_InvalidSources, string.Join(", ", e.SourcesList));
+                    ? LocalizableStrings.NuGetInstaller_InstallResult_Error_InvalidSources_None
+                    : string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_InvalidSources, string.Join(", ", e.SourcesList));
 
                 return InstallResult.CreateFailure(
                         installRequest,
                         InstallerErrorCode.InvalidSource,
-                        message);
+                        message,
+                        []);
             }
             catch (InvalidNuGetPackageException e)
             {
                 return InstallResult.CreateFailure(
                     installRequest,
                     InstallerErrorCode.InvalidPackage,
-                    string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_InvalidPackage, e.PackageLocation));
+                    string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_InvalidPackage, e.PackageLocation),
+                    []);
+            }
+            catch (VulnerablePackageException e)
+            {
+                return InstallResult.CreateFailure(
+                    installRequest,
+                    InstallerErrorCode.VulnerablePackage,
+                    string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_VulnerablePackage, e.PackageIdentifier),
+                    e.Vulnerabilities);
             }
             catch (OperationCanceledException)
             {
                 return InstallResult.CreateFailure(
                     installRequest,
                     InstallerErrorCode.GenericError,
-                    LocalizableStrings.NuGetInstaller_InstallResut_Error_OperationCancelled);
+                    LocalizableStrings.NuGetInstaller_InstallResult_Error_OperationCancelled,
+                    []);
             }
             catch (Exception e)
             {
@@ -269,7 +313,8 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                 return InstallResult.CreateFailure(
                     installRequest,
                     InstallerErrorCode.GenericError,
-                    string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_InstallGeneric, installRequest.DisplayName, e.Message));
+                    string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_InstallGeneric, installRequest.DisplayName, e.Message),
+                    []);
             }
         }
 
@@ -294,7 +339,7 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                 return Task.FromResult(UninstallResult.CreateFailure(
                     templatePackage,
                     InstallerErrorCode.UnsupportedRequest,
-                    string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_PackageNotSupported, templatePackage.DisplayName, Factory.Name)));
+                    string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_PackageNotSupported, templatePackage.DisplayName, Factory.Name)));
             }
             try
             {
@@ -307,7 +352,7 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                 return Task.FromResult(UninstallResult.CreateFailure(
                     templatePackage,
                     InstallerErrorCode.GenericError,
-                    string.Format(LocalizableStrings.NuGetInstaller_InstallResut_Error_UninstallGeneric, templatePackage.DisplayName, e.Message)));
+                    string.Format(LocalizableStrings.NuGetInstaller_InstallResult_Error_UninstallGeneric, templatePackage.DisplayName, e.Message)));
             }
         }
 
@@ -329,7 +374,7 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                 {
                     throw new InvalidOperationException($"{nameof(uninstallResult.ErrorMessage)} cannot be null when {nameof(uninstallResult.Success)} is 'true'");
                 }
-                return UpdateResult.CreateFailure(updateRequest, uninstallResult.Error, uninstallResult.ErrorMessage);
+                return UpdateResult.CreateFailure(updateRequest, uninstallResult.Error, uninstallResult.ErrorMessage, []);
             }
 
             Dictionary<string, string> installationDetails = new Dictionary<string, string>();
@@ -391,10 +436,14 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
 
             return new NuGetPackageInfo(
                 nuspec.GetAuthors(),
+                nuspec.GetOwners(),
+                // The prefix reservation is not applicable to local packages.
+                reserved: false,
                 packageLocation,
                 null,
                 nuspec.GetId(),
-                nuspec.GetVersion().ToNormalizedString());
+                nuspec.GetVersion().ToNormalizedString(),
+                []);
         }
     }
 }

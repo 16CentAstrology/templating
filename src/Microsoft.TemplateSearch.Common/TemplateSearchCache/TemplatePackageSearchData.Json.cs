@@ -1,9 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine;
 using Newtonsoft.Json;
@@ -11,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.TemplateSearch.Common
 {
-    [JsonConverter(typeof(TemplatePackageSearchData.TemplatePackageSearchDataJsonConverter))]
+    [JsonConverter(typeof(TemplatePackageSearchDataJsonConverter))]
     public partial class TemplatePackageSearchData
     {
         internal TemplatePackageSearchData(JObject jObject, ILogger logger, IReadOnlyDictionary<string, Func<object, object>>? additionalDataReaders = null)
@@ -30,8 +27,8 @@ namespace Microsoft.TemplateSearch.Common
                 : throw new ArgumentException($"{nameof(jObject)} doesn't have {nameof(Name)} property or it is not a string.", nameof(jObject));
             Version = jObject.ToString(nameof(Version));
             TotalDownloads = jObject.ToInt32(nameof(TotalDownloads));
-            Owners = jObject.Get<JToken>(nameof(Owners)).JTokenStringOrArrayToCollection(Array.Empty<string>());
-            Verified = jObject.ToBool(nameof(Verified));
+            Owners = jObject.Get<JToken>(nameof(Owners)).JTokenStringOrArrayToCollection([]);
+            Reserved = jObject.ToBool(nameof(Reserved));
 
             Description = jObject.ToString(nameof(Description));
             IconUrl = jObject.ToString(nameof(IconUrl));
@@ -107,10 +104,10 @@ namespace Microsoft.TemplateSearch.Common
                     }
                 }
 
-                if (value.Verified)
+                if (value.Reserved)
                 {
-                    writer.WritePropertyName(nameof(Verified));
-                    writer.WriteValue(value.Verified);
+                    writer.WritePropertyName(nameof(Reserved));
+                    writer.WriteValue(value.Reserved);
                 }
                 if (!string.IsNullOrWhiteSpace(value.Description))
                 {

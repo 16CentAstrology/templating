@@ -1,12 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#nullable enable
-
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using Microsoft.TemplateEngine.Core.Contracts;
 using Microsoft.TemplateEngine.Core.Matching;
@@ -15,7 +10,7 @@ namespace Microsoft.TemplateEngine.Core.Util
 {
     public class ProcessorState : IProcessorState
     {
-        private static readonly ConcurrentDictionary<IReadOnlyList<IOperationProvider>, Dictionary<Encoding, Trie<OperationTerminal>>> TrieLookup = new();
+        private static readonly ConcurrentDictionary<IReadOnlyList<IOperationProvider>, ConcurrentDictionary<Encoding, Trie<OperationTerminal>>> TrieLookup = new();
         private static readonly ConcurrentDictionary<IReadOnlyList<IOperationProvider>, List<string>> OperationsToExplicitlySetOnByDefault = new();
         private readonly StreamProxy _target;
         private readonly TrieEvaluator<OperationTerminal> _trie;
@@ -76,7 +71,7 @@ namespace Microsoft.TemplateEngine.Core.Util
             WriteToTarget(bom, 0, _bomSize);
 
             bool explicitOnConfigurationRequired = false;
-            Dictionary<Encoding, Trie<OperationTerminal>> byEncoding = TrieLookup.GetOrAdd(operationProviders, x => new Dictionary<Encoding, Trie<OperationTerminal>>());
+            ConcurrentDictionary<Encoding, Trie<OperationTerminal>> byEncoding = TrieLookup.GetOrAdd(operationProviders, x => new());
             List<string> turnOnByDefault = OperationsToExplicitlySetOnByDefault.GetOrAdd(operationProviders, x =>
             {
                 explicitOnConfigurationRequired = true;
@@ -108,7 +103,7 @@ namespace Microsoft.TemplateEngine.Core.Util
                     }
                 }
 
-                byEncoding[encoding] = trie;
+                byEncoding.TryAdd(encoding, trie);
             }
 
             foreach (string state in turnOnByDefault)
@@ -201,9 +196,9 @@ namespace Microsoft.TemplateEngine.Core.Util
                 {
                     int posedPosition = CurrentSequenceNumber;
                     bool skipAdvanceBuffer = false;
-                    if (_trie.Accept(CurrentBuffer[CurrentBufferPosition], ref posedPosition, out TerminalLocation<OperationTerminal> terminal))
+                    if (_trie.Accept(CurrentBuffer[CurrentBufferPosition], ref posedPosition, out TerminalLocation<OperationTerminal>? terminal))
                     {
-                        IOperation operation = terminal.Terminal.Operation;
+                        IOperation operation = terminal!.Terminal.Operation;
                         int matchLength = terminal.Terminal.End - terminal.Terminal.Start + 1;
                         int handoffBufferPosition = CurrentBufferPosition + matchLength - (CurrentSequenceNumber - terminal.Location);
 
@@ -296,7 +291,7 @@ namespace Microsoft.TemplateEngine.Core.Util
                 if (!AdvanceBuffer(bufferPositionToAdvanceTo))
                 {
                     int posedPosition = CurrentSequenceNumber;
-                    _trie.FinalizeMatchesInProgress(ref posedPosition, out TerminalLocation<OperationTerminal> terminal);
+                    _trie.FinalizeMatchesInProgress(ref posedPosition, out TerminalLocation<OperationTerminal>? terminal);
 
                     while (terminal != null)
                     {

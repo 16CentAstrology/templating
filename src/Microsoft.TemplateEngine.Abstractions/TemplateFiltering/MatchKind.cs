@@ -1,8 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-
 namespace Microsoft.TemplateEngine.Abstractions.TemplateFiltering
 {
     /// <summary>
@@ -17,7 +15,7 @@ namespace Microsoft.TemplateEngine.Abstractions.TemplateFiltering
 
         /// <summary>
         /// The filter partially matches the value of <see cref="ITemplateInfo"/>.
-        /// For example, <see cref="ITemplateInfo.Name"/> contains the value of the filter but not equal to it.
+        /// For example, <see cref="ITemplateMetadata.Name"/> contains the value of the filter but not equal to it.
         /// </summary>
         Partial,
 

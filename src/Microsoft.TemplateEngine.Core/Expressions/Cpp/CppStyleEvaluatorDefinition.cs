@@ -1,14 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#nullable enable
-
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
@@ -22,20 +16,18 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Cpp
     {
         private const int ReservedTokenCount = 24;
         private const int ReservedTokenMaxIndex = ReservedTokenCount - 1;
-        private static readonly IOperationProvider[] NoOperationProviders = Array.Empty<IOperationProvider>();
+        private static readonly IOperationProvider[] NoOperationProviders = [];
         private static readonly char[] SupportedQuotes = { '"', '\'' };
 
         public static bool EvaluateFromString(ILogger logger, string text, IVariableCollection variables)
         {
-            using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(text)))
-            using (MemoryStream res = new MemoryStream())
-            {
-                EngineConfig cfg = new EngineConfig(logger, variables);
-                IProcessorState state = new ProcessorState(ms, res, (int)ms.Length, (int)ms.Length, cfg, NoOperationProviders);
-                int len = (int)ms.Length;
-                int pos = 0;
-                return Evaluate(state, ref len, ref pos, out bool faulted);
-            }
+            using MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(text));
+            using MemoryStream res = new MemoryStream();
+            EngineConfig cfg = new EngineConfig(logger, variables);
+            IProcessorState state = new ProcessorState(ms, res, (int)ms.Length, (int)ms.Length, cfg, NoOperationProviders);
+            int len = (int)ms.Length;
+            int pos = 0;
+            return Evaluate(state, ref len, ref pos, out bool faulted);
         }
 
         public static bool Evaluate(IProcessorState processor, ref int bufferLength, ref int currentBufferPosition, out bool faulted)
@@ -300,7 +292,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Cpp
 
                 Scope tmp2 = new Scope
                 {
-                    Value = leftScope.Right
+                    Value = leftScope.Right!
                 };
 
                 leftScope.Right = tmp2;
@@ -317,7 +309,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Cpp
             }
             else
             {
-                tmp.Value = current.Right;
+                tmp.Value = current.Right!;
                 current.Right = tmp;
                 parents.Push(current);
             }
@@ -350,7 +342,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Cpp
                     else if (tokens[i].Family == TokenFamily.Literal)
                     {
                         //Combine literals
-                        string literalValue = tokens[i].Literal;
+                        string literalValue = tokens[i].Literal!;
                         string followingWhitespace = string.Empty;
                         int reach = i;
 
@@ -411,7 +403,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Cpp
                             break;
                         }
                     case TokenFamily.Literal:
-                        current.Value = InferTypeAndConvertLiteral(outputTokens[i].Literal);
+                        current.Value = InferTypeAndConvertLiteral(outputTokens[i].Literal!)!;
 
                         while (parents.Count > 0 && current.TargetPlacement == Scope.NextPlacement.None)
                         {
@@ -535,7 +527,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Cpp
 
         private static object? InferTypeAndConvertLiteral(string literal)
         {
-            //A propertly quoted string must be...
+            //  A properly quoted string must be...
             //  At least two characters long
             //  Start and end with the same character
             //  The character that the string starts with must be one of the supported quote kinds
@@ -558,7 +550,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Cpp
 
                 if ((literal.Contains(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator)
                     || literal.Contains(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator))
-                    && ParserExtensions.DoubleTryParseСurrentOrInvariant(literal, out double literalDouble))
+                    && ParserExtensions.DoubleTryParseCurrentOrInvariant(literal, out double literalDouble))
                 {
                     return literalDouble;
                 }

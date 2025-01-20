@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
 using System.Text;
 using Microsoft.TemplateEngine.Core.Contracts;
 
@@ -9,12 +8,12 @@ namespace Microsoft.TemplateEngine.Core
 {
     public static class TokenConfigExtensions
     {
-        public static ITokenConfig TokenConfig(this string s)
+        public static ITokenConfig TokenConfig(this string? s)
         {
             return Core.TokenConfig.FromValue(s);
         }
 
-        public static TokenConfig TokenConfigBuilder(this string s)
+        public static TokenConfig TokenConfigBuilder(this string? s)
         {
             return Core.TokenConfig.FromValue(s);
         }

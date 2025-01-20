@@ -1,11 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#nullable enable
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Constraints;
@@ -23,15 +18,17 @@ namespace Microsoft.TemplateEngine.Mocks
 
         private Dictionary<string, TemplateParameter> _parameters = new Dictionary<string, TemplateParameter>();
 
-        private string[] _baselineInfo = Array.Empty<string>();
+        private string[] _baselineInfo = [];
 
-        private string[] _classifications = Array.Empty<string>();
+        private string[] _classifications = [];
 
-        private string[] _shortNameList = Array.Empty<string>();
+        private string[] _shortNameList = [];
 
-        private Guid[] _postActions = Array.Empty<Guid>();
+        private readonly bool _preferDefaultName = true;
 
-        private TemplateConstraintInfo[] _constraints = Array.Empty<TemplateConstraintInfo>();
+        private Guid[] _postActions = [];
+
+        private TemplateConstraintInfo[] _constraints = [];
 
         private Dictionary<string, string> _tags = new Dictionary<string, string>();
 
@@ -87,6 +84,8 @@ namespace Microsoft.TemplateEngine.Mocks
         }
 
         public IReadOnlyList<string> ShortNameList => _shortNameList;
+
+        public bool PreferDefaultName => _preferDefaultName;
 
         [Obsolete("Use ParameterDefinitionSet instead.")]
         IReadOnlyDictionary<string, ICacheTag> ITemplateInfo.Tags => throw new NotImplementedException();

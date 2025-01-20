@@ -24,13 +24,13 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.PackChecking
 
         public string? Version => _info.Version;
 
-        public string Path { get; private set; }
+        public string Path { get; }
 
         public long TotalDownloads => _info.TotalDownloads;
 
         public IReadOnlyList<string> Owners => _info.Owners;
 
-        public bool Verified => _info.Verified;
+        public bool Reserved => _info.Reserved;
 
         public string? Description => _info.Description;
 

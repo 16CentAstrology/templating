@@ -1,15 +1,11 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Installer;
 using Microsoft.TemplateEngine.Edge.Settings;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.TemplateEngine.Edge.BuiltInManagedProvider
@@ -19,7 +15,6 @@ namespace Microsoft.TemplateEngine.Edge.BuiltInManagedProvider
         private const int FileReadWriteRetries = 20;
         private const int MillisecondsInterval = 20;
         private static readonly TimeSpan MaxNotificationDelayOnWriterLock = TimeSpan.FromSeconds(1);
-        private readonly SettingsFilePaths _paths;
         private readonly IEngineEnvironmentSettings _environmentSettings;
         private readonly string _globalSettingsFile;
         private IDisposable? _watcher;
@@ -31,7 +26,6 @@ namespace Microsoft.TemplateEngine.Edge.BuiltInManagedProvider
         {
             _environmentSettings = environmentSettings ?? throw new ArgumentNullException(nameof(environmentSettings));
             _globalSettingsFile = globalSettingsFile ?? throw new ArgumentNullException(nameof(globalSettingsFile));
-            _paths = new SettingsFilePaths(environmentSettings);
             environmentSettings.Host.FileSystem.CreateDirectory(Path.GetDirectoryName(_globalSettingsFile));
             _watcher = CreateWatcherIfRequested();
         }
@@ -76,7 +70,7 @@ namespace Microsoft.TemplateEngine.Edge.BuiltInManagedProvider
 
             if (!_environmentSettings.Host.FileSystem.FileExists(_globalSettingsFile))
             {
-                return Array.Empty<TemplatePackageData>();
+                return [];
             }
 
             for (int i = 0; i < FileReadWriteRetries; i++)
@@ -98,6 +92,11 @@ namespace Microsoft.TemplateEngine.Edge.BuiltInManagedProvider
                     }
 
                     return packages;
+                }
+                catch (JsonReaderException ex)
+                {
+                    var wrappedEx = new JsonReaderException(string.Format(LocalizableStrings.GlobalSettings_Error_CorruptedSettings, _globalSettingsFile, ex.Message), ex);
+                    throw wrappedEx;
                 }
                 catch (Exception)
                 {

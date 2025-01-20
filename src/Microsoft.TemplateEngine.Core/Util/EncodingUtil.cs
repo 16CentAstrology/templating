@@ -7,13 +7,16 @@ namespace Microsoft.TemplateEngine.Core.Util
 {
     public static class EncodingUtil
     {
+        /// <summary>
+        /// Detects encoding of the stream.
+        /// </summary>
         /// <remarks>http://www.unicode.org/faq/utf_bom.html.</remarks>
         public static Encoding Detect(byte[] buffer, int currentBufferLength, out byte[] bom)
         {
             if (currentBufferLength == 0)
             {
                 //File is zero length - pick something
-                bom = System.Array.Empty<byte>();
+                bom = [];
                 return Encoding.UTF8;
             }
 
@@ -62,7 +65,7 @@ namespace Microsoft.TemplateEngine.Core.Util
             }
 
             //Fallback to UTF-8
-            bom = System.Array.Empty<byte>();
+            bom = [];
             return Encoding.UTF8;
         }
     }

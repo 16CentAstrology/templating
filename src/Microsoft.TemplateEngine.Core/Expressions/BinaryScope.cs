@@ -1,15 +1,13 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-
 namespace Microsoft.TemplateEngine.Core.Expressions
 {
     public class BinaryScope<TOperator> : IEvaluable
     {
-        private readonly Func<object, object, object> _evaluate;
+        private readonly Func<object?, object?, object> _evaluate;
 
-        public BinaryScope(IEvaluable parent, TOperator @operator, Func<object, object, object> evaluate)
+        public BinaryScope(IEvaluable? parent, TOperator @operator, Func<object?, object?, object> evaluate)
         {
             Parent = parent;
             Operator = @operator;
@@ -20,18 +18,18 @@ namespace Microsoft.TemplateEngine.Core.Expressions
 
         public bool IsIndivisible => false;
 
-        public IEvaluable Left { get; set; }
+        public IEvaluable? Left { get; set; }
 
         public TOperator Operator { get; }
 
-        public IEvaluable Parent { get; set; }
+        public IEvaluable? Parent { get; set; }
 
-        public IEvaluable Right { get; set; }
+        public IEvaluable? Right { get; set; }
 
         public object Evaluate()
         {
-            object left = Left.Evaluate();
-            object right = Right.Evaluate();
+            object? left = Left?.Evaluate();
+            object? right = Right?.Evaluate();
             return _evaluate(left, right);
         }
 
@@ -40,7 +38,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions
             return $@"({Left} -{Operator}- {Right})";
         }
 
-        public bool TryAccept(IEvaluable child)
+        public bool TryAccept(IEvaluable? child)
         {
             if (Left == null)
             {

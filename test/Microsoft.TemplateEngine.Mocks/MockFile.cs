@@ -1,15 +1,13 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.IO;
-using System.Linq;
 using Microsoft.TemplateEngine.Abstractions.Mount;
 
 namespace Microsoft.TemplateEngine.Mocks
 {
     public class MockFile : IFile
     {
-        private readonly byte[] _contents;
+        private readonly byte[]? _contents;
 
         public MockFile(string fullpath, IMountPoint mountPoint)
         {
@@ -35,7 +33,7 @@ namespace Microsoft.TemplateEngine.Mocks
 
         public FileSystemInfoKind Kind => FileSystemInfoKind.File;
 
-        public IDirectory Parent { get; }
+        public IDirectory? Parent { get; }
 
         public string Name { get; }
 

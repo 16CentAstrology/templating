@@ -1,9 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using FakeItEasy;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Mount;
@@ -14,7 +11,6 @@ using Microsoft.TemplateEngine.Core.Operations;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.ConfigModel;
 using Microsoft.TemplateEngine.TestHelper;
 using Newtonsoft.Json.Linq;
-using Xunit;
 
 namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.TemplateConfigTests
 {
@@ -32,20 +28,22 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
         {
             IEngineEnvironmentSettings environment = _environmentSettingsHelper.CreateEnvironment();
             string sourceBasePath = environment.GetTempVirtualizedPath();
-            string sourceConfig = @"
-{
-  ""identity"": ""test"",
-  ""name"": ""test"",
-  ""shortname"": ""test"",
-  ""sources"": [
-    {
-      ""rename"": {
-        ""RenameMe.txt"": ""YesNewName.txt"",
-        ""DontRenameMe.txt"": ""NoNewName.txt""
-      },
-    }
-  ]
-}";
+
+            string sourceConfig = /*lang=json*/ """
+                {
+                  "identity": "test",
+                  "name": "test",
+                  "shortname": "test",
+                  "sources": [
+                    {
+                      "rename": {
+                        "RenameMe.txt": "YesNewName.txt",
+                        "DontRenameMe.txt": "NoNewName.txt"
+                      },
+                    }
+                  ]
+                }
+                """;
 
             IDictionary<string, string?> templateSourceFiles = new Dictionary<string, string?>
             {
@@ -55,7 +53,6 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 { "RenameMe.txt", null },
                 { "dontrenameme.txt", null }
             };
-
             environment.WriteTemplateSource(sourceBasePath, templateSourceFiles);
 
             string targetDir = environment.GetTempVirtualizedPath();
@@ -65,10 +62,10 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
             Assert.NotNull(templateConfigFile);
 
-            ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
+            using ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
             ParameterSetData parameters = new(template);
 
-            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(environment, template, parameters, targetDir, default).ConfigureAwait(false);
+            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(environment, template, parameters, targetDir, default);
             IEnumerable<IFileChange2> changes = result.FileChanges.Cast<IFileChange2>();
 
             Assert.Equal(2, result.FileChanges.Count);
@@ -85,25 +82,25 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IEngineEnvironmentSettings environment = _environmentSettingsHelper.CreateEnvironment();
             string sourceBasePath = environment.GetTempVirtualizedPath();
 
-            string sourceConfig = @"
-{
-  ""identity"": ""test"",
-  ""name"": ""test"",
-  ""shortname"": ""test"",
-  ""sources"": [
-    {
-      ""modifiers"": [
-        {
-          ""rename"": {
-            ""RenameMe.txt"": ""YesNewName.txt"",
-            ""DontRenameMe.txt"": ""NoNewName.txt"",
-          }
-        }
-      ]
-    }
-  ]
-}
-";
+            string sourceConfig = /*lang=json*/ """
+                {
+                  "identity": "test",
+                  "name": "test",
+                  "shortname": "test",
+                  "sources": [
+                    {
+                      "modifiers": [
+                        {
+                          "rename": {
+                            "RenameMe.txt": "YesNewName.txt",
+                            "DontRenameMe.txt": "NoNewName.txt",
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """;
 
             IDictionary<string, string?> templateSourceFiles = new Dictionary<string, string?>
             {
@@ -122,10 +119,10 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
             Assert.NotNull(templateConfigFile);
 
-            ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
+            using ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
             ParameterSetData parameters = new(template);
 
-            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(environment, template, parameters, targetDir, default).ConfigureAwait(false);
+            ICreationEffects result = await (generator as IGenerator).GetCreationEffectsAsync(environment, template, parameters, targetDir, default);
             IEnumerable<IFileChange2> changes = result.FileChanges.Cast<IFileChange2>();
 
             Assert.Equal(2, result.FileChanges.Count);
@@ -142,6 +139,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             string configContent = /*lang=json*/ """
             {
               "identity": "test",
+              "name": "test",
+              "shortName": "test",
               "symbols": {
                 "testparam": {
                   "type": "parameter",
@@ -170,9 +169,11 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             }
             """;
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.Parse(configContent));
-            IEngineEnvironmentSettings environment = _environmentSettingsHelper.CreateEnvironment();
-            RunnableProjectConfig runnableConfig =
-                new(environment, A.Fake<IGenerator>(), configModel, A.Fake<IDirectory>());
+            IEngineEnvironmentSettings environmentSettings = _environmentSettingsHelper.CreateEnvironment();
+
+            string sourceBasePath = environmentSettings.GetTempVirtualizedPath();
+            using IMountPoint mountPoint = environmentSettings.MountPath(sourceBasePath);
+            using RunnableProjectConfig runnableConfig = new(environmentSettings, A.Fake<IGenerator>(), configModel, mountPoint.Root);
 
             Assert.Equal(2, runnableConfig.SymbolFilenameReplacements.Count);
             Assert.Equal("testparamfilereplacement", runnableConfig.SymbolFilenameReplacements.Single(x => x.VariableName.Contains("testparam")).OriginalValue.Value);
@@ -185,6 +186,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             string configContent = /*lang=json*/ """
             {
               "identity": "test",
+              "name": "test",
+              "shortName": "test",
               "symbols": {
                 "testparam": {
                   "type": "parameter",
@@ -224,9 +227,12 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             }
             """;
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.Parse(configContent));
-            IEngineEnvironmentSettings environment = _environmentSettingsHelper.CreateEnvironment();
-            RunnableProjectConfig runnableConfig =
-                new(environment, A.Fake<IGenerator>(), configModel, A.Fake<IDirectory>());
+            IEngineEnvironmentSettings environmentSettings = _environmentSettingsHelper.CreateEnvironment();
+
+            string sourceBasePath = environmentSettings.GetTempVirtualizedPath();
+            using IMountPoint mountPoint = environmentSettings.MountPath(sourceBasePath);
+
+            using RunnableProjectConfig runnableConfig = new(environmentSettings, A.Fake<IGenerator>(), configModel, mountPoint.Root);
 
             Assert.Equal(4, runnableConfig.SymbolFilenameReplacements.Count);
             Assert.Equal(3, runnableConfig.SymbolFilenameReplacements.Count(x => x.VariableName.Contains("testparam")));
@@ -247,12 +253,13 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IDictionary<string, string?> templateSourceFiles = new Dictionary<string, string?>
             {
                 // template.json
-                { TestFileSystemUtils.DefaultConfigRelativePath, Constants.MinimalTemplateConfig },
+                { TestFileSystemUtils.DefaultConfigRelativePath, string.Empty },
                 // content
                 { "Replace1_file.txt", null },
                 { "Replace2_file.txt", null }
             };
             environment.WriteTemplateSource(sourceBasePath, templateSourceFiles);
+
             //get target directory
             string targetDir = environment.GetTempVirtualizedPath();
 
@@ -269,13 +276,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 new ReplacementTokens("test", TokenConfig.FromValue("Replace1"))
             };
 
-            RunnableProjectGenerator generator = new();
-
             using IMountPoint mountPoint = environment.MountPath(sourceBasePath);
-            IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
-            Assert.NotNull(templateConfigFile);
-
-            ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
 
             IReadOnlyDictionary<string, string> allChanges = FileRenameGenerator.AugmentFileRenames(
                 environment,
@@ -288,7 +289,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 fileRenames: new Dictionary<string, string>(),
                 symbolBasedFileRenames: symbolBasedRenames);
 
-            Assert.Equal(1, allChanges.Count);
+            Assert.Single(allChanges);
             Assert.Equal("Replace1Value_file.txt", allChanges["Replace1_file.txt"]);
         }
 
@@ -303,7 +304,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IDictionary<string, string?> templateSourceFiles = new Dictionary<string, string?>
             {
                 // template.json
-                { TestFileSystemUtils.DefaultConfigRelativePath, Constants.MinimalTemplateConfig },
+                { TestFileSystemUtils.DefaultConfigRelativePath, string.Empty },
                 // content
                 { "date_name.txt", null },
                 { "other_name.txt", null }
@@ -329,13 +330,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 new ReplacementTokens("name", TokenConfig.FromValue("name"))
             };
 
-            RunnableProjectGenerator generator = new();
-
             using IMountPoint mountPoint = environment.MountPath(sourceBasePath);
-            IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
-            Assert.NotNull(templateConfigFile);
-
-            ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
 
             IReadOnlyDictionary<string, string> allChanges = FileRenameGenerator.AugmentFileRenames(
                 environment,
@@ -364,7 +359,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IDictionary<string, string?> templateSourceFiles = new Dictionary<string, string?>
             {
                 // template.json
-                { TestFileSystemUtils.DefaultConfigRelativePath, Constants.MinimalTemplateConfig },
+                { TestFileSystemUtils.DefaultConfigRelativePath, string.Empty },
                 // content
                 { "Replace1_file.txt", null },
                 { "replace2_file.txt", null },
@@ -392,15 +387,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 new ReplacementTokens("test{-VALUE-FORMS-}lc", TokenConfig.FromValue("replace"))
             };
 
-            RunnableProjectGenerator generator = new();
-
             using IMountPoint mountPoint = environment.MountPath(sourceBasePath);
-            IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
-            Assert.NotNull(templateConfigFile);
-
-            ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
-
-            object resolvedNameValue = variables["name"];
             IReadOnlyDictionary<string, string> allChanges = FileRenameGenerator.AugmentFileRenames(
                 environment,
                 sourceBasePath,
@@ -429,7 +416,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IDictionary<string, string?> templateSourceFiles = new Dictionary<string, string?>
             {
                 // template.json
-                { TestFileSystemUtils.DefaultConfigRelativePath, Constants.MinimalTemplateConfig },
+                { TestFileSystemUtils.DefaultConfigRelativePath, string.Empty },
                 // content
                 { "replace1_file.txt", null },
                 { "replace2_file.txt", null }
@@ -454,13 +441,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 new ReplacementTokens("test{-VALUE-FORMS-}lc", TokenConfig.FromValue("replace"))
             };
 
-            RunnableProjectGenerator generator = new();
-
             using IMountPoint mountPoint = environment.MountPath(sourceBasePath);
-            IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
-            Assert.NotNull(templateConfigFile);
-
-            ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
 
             IReadOnlyDictionary<string, string> allChanges = FileRenameGenerator.AugmentFileRenames(
                 environment,
@@ -489,7 +470,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IDictionary<string, string?> templateSourceFiles = new Dictionary<string, string?>
             {
                 // template.json
-                { TestFileSystemUtils.DefaultConfigRelativePath, Constants.MinimalTemplateConfig },
+                { TestFileSystemUtils.DefaultConfigRelativePath, string.Empty },
                 // content
                 { "Replace1_file.txt", null },
                 { "Replace2_file.txt", null }
@@ -512,14 +493,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 new ReplacementTokens("test", TokenConfig.FromValue("Replace"))
             };
 
-            RunnableProjectGenerator generator = new();
-
             using IMountPoint mountPoint = environment.MountPath(sourceBasePath);
-            IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
-            Assert.NotNull(templateConfigFile);
-
-            ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
-
             IReadOnlyDictionary<string, string> allChanges = FileRenameGenerator.AugmentFileRenames(
                 environment,
                 sourceBasePath,
@@ -547,7 +521,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
             IDictionary<string, string?> templateSourceFiles = new Dictionary<string, string?>
             {
                 // template.json
-                { TestFileSystemUtils.DefaultConfigRelativePath, Constants.MinimalTemplateConfig },
+                { TestFileSystemUtils.DefaultConfigRelativePath, string.Empty },
                 // content
                 { @"Replace_dir/Replace_file.txt", null }
             };
@@ -569,14 +543,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Templ
                 new ReplacementTokens("test", TokenConfig.FromValue("Replace"))
             };
 
-            RunnableProjectGenerator generator = new();
-
             using IMountPoint mountPoint = environment.MountPath(sourceBasePath);
-            IFile? templateConfigFile = mountPoint.FileInfo(TestFileSystemUtils.DefaultConfigRelativePath);
-            Assert.NotNull(templateConfigFile);
-
-            ITemplate template = new RunnableProjectConfig(environment, generator, templateConfigFile);
-
             IReadOnlyDictionary<string, string> allChanges = FileRenameGenerator.AugmentFileRenames(
                 environment,
                 sourceBasePath,

@@ -1,8 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using Microsoft.TemplateEngine.Core.Contracts;
 using Xunit;
@@ -666,7 +664,7 @@ Past endif
         /// <summary>
         /// Tests that the #else block is uncommented in each of the scenarios because:
         ///     its the special #else
-        ///     and the if & elseif conditions are false.
+        ///     and the if and elseif conditions are false.
         /// </summary>
         [Fact(DisplayName = nameof(VerifyElseUncomments))]
         public void VerifyElseUncomments()

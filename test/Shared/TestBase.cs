@@ -1,10 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#if !NET7_0_OR_GREATER
-using System;
-using System.IO;
-#endif
 using Microsoft.TemplateEngine.TestHelper;
 
 namespace Microsoft.TemplateEngine.Tests
@@ -38,7 +34,11 @@ namespace Microsoft.TemplateEngine.Tests
             }
         }
 
+        internal static string TemplateFeedLocation { get; } = Path.Combine(CodeBaseRoot, "template_feed");
+
         internal static string TestTemplatesLocation { get; } = Path.Combine(CodeBaseRoot, "test", "Microsoft.TemplateEngine.TestTemplates", "test_templates");
+
+        internal static string SampleTemplatesLocation { get; } = Path.Combine(CodeBaseRoot, "dotnet-template-samples");
 
         internal static string TestTemplatePackagesLocation { get; } = Path.Combine(CodeBaseRoot, "test", "Microsoft.TemplateEngine.TestTemplates", "nupkg_templates");
 

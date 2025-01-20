@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using System.Text;
 using Microsoft.TemplateEngine.Core.Contracts;
 
@@ -9,20 +8,20 @@ namespace Microsoft.TemplateEngine.Core
 {
     public class TokenConfig : ITokenConfig
     {
-        private TokenConfig(string after, string value, string before)
+        private TokenConfig(string? after, string? value, string? before)
         {
             After = after;
             Value = value;
             Before = before;
         }
 
-        public string After { get; }
+        public string? After { get; }
 
-        public string Before { get; }
+        public string? Before { get; }
 
-        public string Value { get; }
+        public string? Value { get; }
 
-        public static TokenConfig FromValue(string value)
+        public static TokenConfig FromValue(string? value)
         {
             return new TokenConfig(null, value, null);
         }
@@ -33,21 +32,21 @@ namespace Microsoft.TemplateEngine.Core
             return new Token(data, start, realEnd);
         }
 
-        public TokenConfig OnlyIfAfter(string prefix)
+        public TokenConfig OnlyIfAfter(string? prefix)
         {
             return new TokenConfig(prefix, Value, Before);
         }
 
-        public TokenConfig OnlyIfBefore(string suffix)
+        public TokenConfig OnlyIfBefore(string? suffix)
         {
             return new TokenConfig(After, Value, suffix);
         }
 
         public IToken ToToken(Encoding encoding)
         {
-            byte[] pre = string.IsNullOrEmpty(After) ? Array.Empty<byte>() : encoding.GetBytes(After);
-            byte[] post = string.IsNullOrEmpty(Before) ? Array.Empty<byte>() : encoding.GetBytes(Before);
-            byte[] core = string.IsNullOrEmpty(Value) ? Array.Empty<byte>() : encoding.GetBytes(Value);
+            byte[] pre = string.IsNullOrEmpty(After) ? [] : encoding.GetBytes(After);
+            byte[] post = string.IsNullOrEmpty(Before) ? [] : encoding.GetBytes(Before);
+            byte[] core = string.IsNullOrEmpty(Value) ? [] : encoding.GetBytes(Value);
 
             byte[] buffer = new byte[pre.Length + core.Length + post.Length];
 
@@ -71,7 +70,7 @@ namespace Microsoft.TemplateEngine.Core
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as ITokenConfig);
+            return Equals((obj as ITokenConfig)!);
         }
 
         public override int GetHashCode()

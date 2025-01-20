@@ -1,13 +1,11 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Installer;
 using Microsoft.TemplateEngine.Abstractions.TemplatePackage;
+using Microsoft.TemplateEngine.Utils;
 
 namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
 {
@@ -15,9 +13,12 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
     {
         private const string AuthorKey = "Author";
         private const string LocalPackageKey = "LocalPackage";
+        private const string OwnersKey = "Owners";
+        private const string ReservedKey = "Reserved";
         private const string NuGetSourceKey = "NuGetSource";
         private const string PackageIdKey = "PackageId";
         private const string PackageVersionKey = "Version";
+
         private readonly IEngineEnvironmentSettings _settings;
         private readonly ILogger _logger;
 
@@ -81,28 +82,17 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
             _logger = settings.Host.LoggerFactory.CreateLogger<NuGetInstaller>();
         }
 
-        public string? Author
-        {
-            get => Details.TryGetValue(AuthorKey, out string author) ? author : null;
+        public ITemplatePackageProvider Provider => ManagedProvider;
 
-            set
-            {
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    Details[AuthorKey] = value!;
-                }
-                else
-                {
-                    _ = Details.Remove(AuthorKey);
-                }
-            }
-        }
+        public IManagedTemplatePackageProvider ManagedProvider { get; }
 
         public string DisplayName => string.IsNullOrWhiteSpace(Version) ? Identifier : $"{Identifier}::{Version}";
 
         public string Identifier => Details[PackageIdKey];
 
         public IInstaller Installer { get; }
+
+        public string MountPointUri { get; }
 
         public DateTime LastChangeTime
         {
@@ -120,6 +110,24 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
             }
         }
 
+        public string? Reserved
+        {
+            get => Details.TryGetValue(ReservedKey, out string reserved) ? reserved : false.ToString();
+            set => UpdateOrRemoveValue(Details, ReservedKey, value, (string entry) => !string.IsNullOrEmpty(entry));
+        }
+
+        public string? Author
+        {
+            get => Details.TryGetValue(AuthorKey, out string author) ? author : null;
+            set => UpdateOrRemoveValue(Details, AuthorKey, value, (string entry) => !string.IsNullOrEmpty(entry));
+        }
+
+        public string? Owners
+        {
+            get => Details.TryGetValue(OwnersKey, out string owners) ? owners : null;
+            set => UpdateOrRemoveValue(Details, OwnersKey, value, (string entry) => !string.IsNullOrEmpty(entry));
+        }
+
         public bool IsLocalPackage
         {
             get
@@ -130,58 +138,19 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
                 }
                 return false;
             }
-
-            set
-            {
-                if (value)
-                {
-                    Details[LocalPackageKey] = true.ToString();
-                }
-                else
-                {
-                    _ = Details.Remove(LocalPackageKey);
-                }
-            }
+            set => UpdateOrRemoveValue(Details, LocalPackageKey, value.ToString(), (string value) => value == true.ToString());
         }
-
-        public string MountPointUri { get; }
 
         public string? NuGetSource
         {
             get => Details.TryGetValue(NuGetSourceKey, out string nugetSource) ? nugetSource : null;
-
-            set
-            {
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    Details[NuGetSourceKey] = value!;
-                }
-                else
-                {
-                    _ = Details.Remove(NuGetSourceKey);
-                }
-            }
+            set => UpdateOrRemoveValue(Details, NuGetSourceKey, value, (string entry) => !string.IsNullOrEmpty(entry));
         }
-
-        public ITemplatePackageProvider Provider => ManagedProvider;
-
-        public IManagedTemplatePackageProvider ManagedProvider { get; }
 
         public string? Version
         {
             get => Details.TryGetValue(PackageVersionKey, out string version) ? version : null;
-
-            set
-            {
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    Details[PackageVersionKey] = value!;
-                }
-                else
-                {
-                    Details.Remove(PackageVersionKey);
-                }
-            }
+            set => UpdateOrRemoveValue(Details, PackageVersionKey, value, (string entry) => !string.IsNullOrEmpty(entry));
         }
 
         internal Dictionary<string, string> Details { get; }
@@ -198,16 +167,22 @@ namespace Microsoft.TemplateEngine.Edge.Installers.NuGet
 
         public IReadOnlyDictionary<string, string> GetDetails()
         {
-            Dictionary<string, string> details = new Dictionary<string, string>();
-            if (!string.IsNullOrWhiteSpace(Author))
-            {
-                details[AuthorKey] = Author!;
-            }
-            if (!string.IsNullOrWhiteSpace(NuGetSource))
-            {
-                details[NuGetSourceKey] = NuGetSource!;
-            }
+            var details = new Dictionary<string, string>();
+
+            details.TryAdd(AuthorKey, Author ?? string.Empty, (string entry) => !string.IsNullOrEmpty(entry));
+            details.TryAdd(OwnersKey, Owners ?? string.Empty, (string entry) => !string.IsNullOrEmpty(entry));
+            details.TryAdd(ReservedKey, Reserved ?? string.Empty, (string entry) => !string.IsNullOrEmpty(entry));
+            details.TryAdd(NuGetSourceKey, NuGetSource ?? string.Empty, (string entry) => !string.IsNullOrEmpty(entry));
+
             return details;
+        }
+
+        private void UpdateOrRemoveValue<TKey, TValue>(IDictionary<TKey, TValue> dict, TKey key, TValue? value, Predicate<TValue> condition)
+        {
+            if (value is null || !dict.TryAdd(key, value, condition))
+            {
+                dict.Remove(key);
+            }
         }
     }
 }

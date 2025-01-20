@@ -20,10 +20,10 @@ namespace Microsoft.TemplateEngine.IDE.IntegrationTests
             try
             {
                 var builtIns = BuiltInTemplatePackagesProviderFactory.GetComponents(TestTemplatesLocation);
-                var host = new DefaultTemplateEngineHost(nameof(PhysicalConfigurationTest).ToString(), "1.0.0", null, builtIns, Array.Empty<string>());
+                var host = new DefaultTemplateEngineHost(nameof(PhysicalConfigurationTest).ToString(), "1.0.0", null, builtIns, []);
 
                 Bootstrapper bootstrapper = new Bootstrapper(host, virtualizeConfiguration: false, loadDefaultComponents: true);
-                var result = await bootstrapper.GetTemplatesAsync(cancellationToken: default).ConfigureAwait(false);
+                var result = await bootstrapper.GetTemplatesAsync(cancellationToken: default);
                 Assert.True(result.Any());
                 bootstrapper.Dispose();
                 Assert.True(Directory.Exists(hostDir));
@@ -46,10 +46,10 @@ namespace Microsoft.TemplateEngine.IDE.IntegrationTests
             var hostDir = Path.Combine(baseDir, nameof(VirtualConfigurationTest).ToString());
 
             var builtIns = BuiltInTemplatePackagesProviderFactory.GetComponents(TestTemplatesLocation);
-            var host = new DefaultTemplateEngineHost(nameof(VirtualConfigurationTest).ToString(), "1.0.0", null, builtIns, Array.Empty<string>());
+            var host = new DefaultTemplateEngineHost(nameof(VirtualConfigurationTest).ToString(), "1.0.0", null, builtIns, []);
 
             Bootstrapper bootstrapper = new Bootstrapper(host, virtualizeConfiguration: true, loadDefaultComponents: true);
-            var result = await bootstrapper.GetTemplatesAsync(cancellationToken: default).ConfigureAwait(false);
+            var result = await bootstrapper.GetTemplatesAsync(cancellationToken: default);
             Assert.True(result.Any());
 
             DateTime? packagesJsonModificationTime = null;
@@ -59,9 +59,9 @@ namespace Microsoft.TemplateEngine.IDE.IntegrationTests
             }
 
             InstallRequest installRequest = new InstallRequest("Microsoft.DotNet.Web.ProjectTemplates.5.0", "5.0.0");
-            IReadOnlyList<InstallResult> installResult = await bootstrapper.InstallTemplatePackagesAsync(new[] { installRequest }, InstallationScope.Global, CancellationToken.None).ConfigureAwait(false);
+            IReadOnlyList<InstallResult> installResult = await bootstrapper.InstallTemplatePackagesAsync(new[] { installRequest }, InstallationScope.Global, CancellationToken.None);
 
-            Assert.Equal(1, installResult.Count);
+            Assert.Single(installResult);
             Assert.True(installResult[0].Success);
             bootstrapper.Dispose();
 
@@ -86,10 +86,10 @@ namespace Microsoft.TemplateEngine.IDE.IntegrationTests
             var expectedHostDir = TestUtils.CreateTemporaryFolder();
 
             var builtIns = BuiltInTemplatePackagesProviderFactory.GetComponents(TestTemplatesLocation);
-            var host = new DefaultTemplateEngineHost(nameof(PhysicalConfigurationTest_WithChangedHostLocation).ToString(), "1.0.0", null, builtIns, Array.Empty<string>());
+            var host = new DefaultTemplateEngineHost(nameof(PhysicalConfigurationTest_WithChangedHostLocation).ToString(), "1.0.0", null, builtIns, []);
 
             Bootstrapper bootstrapper = new Bootstrapper(host, virtualizeConfiguration: false, loadDefaultComponents: true, hostSettingsLocation: expectedHostDir);
-            var result = await bootstrapper.GetTemplatesAsync(cancellationToken: default).ConfigureAwait(false);
+            var result = await bootstrapper.GetTemplatesAsync(cancellationToken: default);
             Assert.True(result.Any());
             bootstrapper.Dispose();
             var hostDir = Path.Combine(expectedHostDir, nameof(PhysicalConfigurationTest_WithChangedHostLocation).ToString());

@@ -1,9 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
@@ -108,62 +105,10 @@ namespace Microsoft.TemplateEngine.TestHelper
         }
 
         [Obsolete]
-        void ITemplateEngineHost.OnSymbolUsed(string symbol, object value)
-        {
-            //do nothing
-        }
-
-        [Obsolete]
-        bool ITemplateEngineHost.OnParameterError(ITemplateParameter parameter, string receivedValue, string message, out string newValue)
-        {
-            //do nothing
-            newValue = receivedValue;
-            return false;
-        }
-
-        [Obsolete]
-        bool ITemplateEngineHost.OnNonCriticalError(string code, string message, string currentFile, long currentPosition)
-        {
-            //do nothing
-            return false;
-        }
-
-        [Obsolete]
-        void ITemplateEngineHost.OnCriticalError(string code, string message, string currentFile, long currentPosition)
-        {
-            //do nothing
-        }
-
-        [Obsolete]
-        void ITemplateEngineHost.LogMessage(string message)
-        {
-            //do nothing
-        }
-
-        [Obsolete]
         bool ITemplateEngineHost.OnPotentiallyDestructiveChangesDetected(IReadOnlyList<IFileChange> changes, IReadOnlyList<IFileChange> destructiveChanges)
         {
             //do nothing
             return false;
-        }
-
-        [Obsolete]
-        bool ITemplateEngineHost.OnConfirmPartialMatch(string name)
-        {
-            //do nothing
-            return false;
-        }
-
-        [Obsolete]
-        void ITemplateEngineHost.LogDiagnosticMessage(string message, string category, params string[] details)
-        {
-            //do nothing
-        }
-
-        [Obsolete]
-        void ITemplateEngineHost.LogTiming(string label, TimeSpan duration, int depth)
-        {
-            //do nothing
         }
     }
 }

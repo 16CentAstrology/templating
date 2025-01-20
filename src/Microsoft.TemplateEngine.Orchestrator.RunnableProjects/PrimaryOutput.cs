@@ -1,10 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Core;
-using Microsoft.TemplateEngine.Core.Contracts;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.ConfigModel;
 
 namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects
@@ -27,9 +25,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects
             IEngineEnvironmentSettings environmentSettings,
             IReadOnlyList<PrimaryOutputModel> modelList,
             IVariableCollection rootVariableCollection,
-            string? sourceName,
-            object? resolvedName,
-            IReadOnlyList<IReplacementTokens>? filenameReplacements)
+            FileRenameGenerator renameGenerator)
         {
             List<ICreationPath> pathList = new();
 
@@ -44,13 +40,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects
                     continue;
                 }
 
-                string resolvedPath = FileRenameGenerator.ApplyRenameToPrimaryOutput(
-                                        model.Path,
-                                        environmentSettings,
-                                        sourceName,
-                                        resolvedName,
-                                        rootVariableCollection,
-                                        filenameReplacements);
+                string resolvedPath = renameGenerator.ApplyRenameToString(model.Path);
 
                 ICreationPath path = new PrimaryOutput(resolvedPath);
                 pathList.Add(path);

@@ -32,13 +32,6 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier
         private readonly ICommandRunner _commandRunner = new CommandRunner();
         private readonly IPhysicalFileSystemEx _fileSystem = new PhysicalFileSystemEx();
 
-        static VerificationEngine()
-        {
-            // Customize diff output of verifier
-            VerifyDiffPlex.Initialize(OutputType.Compact);
-            VerifierSettings.UseSplitModeForUniqueDirectory();
-        }
-
         public VerificationEngine(ILogger logger)
         {
             _logger = logger;
@@ -172,7 +165,7 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier
                     verifySettings.AddScrubber(options.CustomScrubbers.GeneralScrubber);
                 }
 
-                foreach (var pair in options.CustomScrubbers.ScrubersByExtension)
+                foreach (var pair in options.CustomScrubbers.ScrubbersByExtension)
                 {
                     verifySettings.AddScrubber(pair.Key, pair.Value);
                 }
@@ -192,6 +185,8 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier
             }
             verifySettings.UseDirectory(snapshotsDir);
             verifySettings.UseMethodName(GetScenarioName(options));
+            verifySettings.UseDiffPlex(OutputType.Compact);
+            verifySettings.UseSplitModeForUniqueDirectory();
 
             if ((options.UniqueFor ?? UniqueForOption.None) != UniqueForOption.None)
             {
@@ -342,11 +337,22 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier
                 cmdArgs.Add(options.TemplateName);
             }
 
-            var command = new DotnetNewCommand(loggerFactory?.CreateLogger(typeof(DotnetCommand)) ?? logger, cmdArgs.ToArray())
-                .WithCustomOrVirtualHive(customHiveLocation)
+            var command = new DotnetNewCommand(loggerFactory?.CreateLogger(typeof(DotnetCommand)) ?? logger, cmdArgs.ToArray());
+
+            if (!string.IsNullOrEmpty(customHiveLocation))
+            {
+                command.WithCustomHive(customHiveLocation);
+            }
+            else
+            {
+                command.WithoutCustomHive();
+            }
+
+            command
                 .WithCustomExecutablePath(options.DotnetExecutablePath)
                 .WithEnvironmentVariables(options.Environment)
-                .WithWorkingDirectory(workingDir);
+                .WithWorkingDirectory(workingDir)
+                .WithNoUpdateCheck();
 
             var result = commandRunner.RunCommand(command);
             // Cleanup, unless the settings dir was externally passed
@@ -399,7 +405,7 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier
                         scrubbers.ByPathScrubbers.ForEach(scrubberByPath => scrubberByPath(relativePath, sb));
                     }
 
-                    if (!string.IsNullOrEmpty(extension) && scrubbers.ScrubersByExtension.TryGetValue(extension, out Action<StringBuilder>? scrubber))
+                    if (!string.IsNullOrEmpty(extension) && scrubbers.ScrubbersByExtension.TryGetValue(extension, out Action<StringBuilder>? scrubber))
                     {
                         sb ??= new StringBuilder(content);
                         scrubber(sb);
@@ -423,7 +429,8 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier
 
         private async Task VerifyResult(TemplateVerifierOptions args, IInstantiationResult commandResultData, CallerInfo callerInfo)
         {
-            UsesVerifyAttribute a = new UsesVerifyAttribute();
+            UseVerifyAttribute a = new UseVerifyAttribute();
+
             // https://github.com/VerifyTests/Verify/blob/d8cbe38f527d6788ecadd6205c82803bec3cdfa6/src/Verify.Xunit/Verifier.cs#L10
             //  need to simulate execution from tests
             var v = DummyMethod;

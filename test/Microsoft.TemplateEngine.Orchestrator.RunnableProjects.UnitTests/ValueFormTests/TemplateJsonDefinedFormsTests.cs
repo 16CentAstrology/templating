@@ -1,16 +1,13 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
-using System.Linq;
-using FakeItEasy;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Mount;
+using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Abstractions;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.ConfigModel;
 using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Macros;
 using Microsoft.TemplateEngine.TestHelper;
-using Xunit;
 
 namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.ValueFormTests
 {
@@ -33,6 +30,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Value
             TemplateConfigModel model = new("TestTemplate")
             {
                 Name = "TestTemplate",
+                ShortNameList = new[] { "TestTemplate" },
                 Symbols = new List<BaseSymbol>()
                 {
                     new ParameterSymbol("mySymbol", "whatever")
@@ -41,21 +39,23 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Value
                     }
                 }
             };
+            string sourceBasePath = environmentSettings.GetTempVirtualizedPath();
+            using IMountPoint mountPoint = environmentSettings.MountPath(sourceBasePath);
+            using RunnableProjectConfig runConfig = new RunnableProjectConfig(environmentSettings, new RunnableProjectGenerator(), model, mountPoint.Root);
 
-            GlobalRunConfig? runConfig = null;
-
+            GlobalRunConfig? globalRunConfig = null;
             try
             {
-                runConfig = new RunnableProjectConfig(environmentSettings, A.Fake<IGenerator>(), model, A.Fake<IDirectory>()).GlobalOperationConfig;
+                globalRunConfig = runConfig.GlobalOperationConfig;
             }
             catch
             {
-                Assert.True(false, "Should not throw on unknown value form name");
+                Assert.Fail("Should not throw on unknown value form name");
             }
 
             Assert.NotNull(runConfig);
-            Assert.Equal(1, runConfig.ComputedMacros.Count(m => m.VariableName.StartsWith("mySymbol")));
-            BaseMacroConfig mySymbolMacro = runConfig.ComputedMacros.Single(m => m.VariableName.StartsWith("mySymbol"));
+            Assert.Equal(1, globalRunConfig.Macros.Count(m => m.VariableName.StartsWith("mySymbol")));
+            IMacroConfig mySymbolMacro = globalRunConfig.Macros.Single(m => m.VariableName.StartsWith("mySymbol"));
 
             Assert.True(mySymbolMacro is ProcessValueFormMacroConfig);
             ProcessValueFormMacroConfig? identityFormConfig = mySymbolMacro as ProcessValueFormMacroConfig;
@@ -75,6 +75,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Value
             TemplateConfigModel model = new("TestTemplate")
             {
                 Name = "TestTemplate",
+                ShortNameList = new[] { "TestTemplate" },
                 Symbols = new List<BaseSymbol>()
                 {
                     new ParameterSymbol("original", "whatever"),
@@ -82,15 +83,18 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests.Value
                 }
             };
 
-            GlobalRunConfig? runConfig = null;
+            string sourceBasePath = environmentSettings.GetTempVirtualizedPath();
+            using IMountPoint mountPoint = environmentSettings.MountPath(sourceBasePath);
+            using RunnableProjectConfig runConfig = new RunnableProjectConfig(environmentSettings, new RunnableProjectGenerator(), model, mountPoint.Root);
 
+            GlobalRunConfig? globalRunConfig = null;
             try
             {
-                runConfig = new RunnableProjectConfig(environmentSettings, A.Fake<IGenerator>(), model, A.Fake<IDirectory>()).GlobalOperationConfig;
+                globalRunConfig = runConfig.GlobalOperationConfig;
             }
             catch
             {
-                Assert.True(false, "Should not throw on unknown value form name");
+                Assert.Fail("Should not throw on unknown value form name");
             }
 
             Assert.NotNull(runConfig);

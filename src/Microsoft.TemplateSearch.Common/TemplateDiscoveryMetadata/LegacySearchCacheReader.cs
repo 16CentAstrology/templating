@@ -1,11 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
 using Newtonsoft.Json.Linq;
@@ -49,7 +45,7 @@ namespace Microsoft.TemplateSearch.Common
                         templateData.Add(new TemplateSearchData(foundTemplate));
                     }
                 }
-                packageData.Add(new TemplatePackageSearchData(new PackInfo(package.Key, package.Value.Version, package.Value.TotalDownloads, package.Value.Owners, package.Value.Verified), templateData));
+                packageData.Add(new TemplatePackageSearchData(new PackInfo(package.Key, package.Value.Version, package.Value.TotalDownloads, package.Value.Owners, package.Value.Reserved), templateData));
             }
             return new TemplateSearchCache(packageData);
         }

@@ -5,7 +5,7 @@ using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Abstractions;
 
 namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Macros
 {
-    internal class CaseChangeMacroConfig : BaseMacroConfig<CaseChangeMacro, CaseChangeMacroConfig>
+    internal class CaseChangeMacroConfig : BaseMacroConfig<CaseChangeMacro, CaseChangeMacroConfig>, IMacroConfigDependency
     {
         internal CaseChangeMacroConfig(CaseChangeMacro macro, string variableName, string? dataType, string sourceVariable, bool toLower)
             : base(macro, variableName, dataType)
@@ -29,5 +29,11 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Macros
         public string Source { get; }
 
         internal bool ToLower { get; }
+
+        public void ResolveSymbolDependencies(IReadOnlyList<string> symbols)
+        {
+            MacroDependenciesResolved = true;
+            PopulateMacroConfigDependencies(Source, symbols);
+        }
     }
 }

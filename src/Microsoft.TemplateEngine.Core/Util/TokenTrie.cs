@@ -1,8 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
 using Microsoft.TemplateEngine.Core.Contracts;
 using Microsoft.TemplateEngine.Core.Matching;
 
@@ -40,10 +38,10 @@ namespace Microsoft.TemplateEngine.Core.Util
             return count;
         }
 
-        public void AddToken(IToken token, int index)
+        public void AddToken(IToken? token, int index)
         {
-            _tokens.Add(token);
-            _lengths.Add(token.Length);
+            _tokens.Add(token!);
+            _lengths.Add(token!.Length);
             Token t = new Token(token.Value, index, token.Start, token.End);
             AddPath(token.Value, t);
 
@@ -87,7 +85,7 @@ namespace Microsoft.TemplateEngine.Core.Util
                 bufferLength = Math.Min(bufferLength, currentBufferPosition + MaxLength);
             }
 
-            TerminalLocation<Token> location = driver.Evaluate(buffer, bufferLength, true, 0, ref currentBufferPosition);
+            TerminalLocation<Token>? location = driver.Evaluate(buffer, bufferLength, true, 0, ref currentBufferPosition);
 
             if (location != null && (!mustMatchPosition || (currentBufferPosition - location.Terminal.Length == originalPosition)))
             {

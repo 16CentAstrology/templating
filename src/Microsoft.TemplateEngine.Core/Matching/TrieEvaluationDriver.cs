@@ -14,13 +14,13 @@ namespace Microsoft.TemplateEngine.Core.Matching
             _evaluator = trie;
         }
 
-        public TerminalLocation<T> Evaluate(byte[] buffer, int bufferLength, bool isFinalBuffer, int lastNetBufferEffect, ref int bufferPosition)
+        public TerminalLocation<T>? Evaluate(byte[] buffer, int bufferLength, bool isFinalBuffer, int lastNetBufferEffect, ref int bufferPosition)
         {
             _sequenceNumber += lastNetBufferEffect;
             int sequenceNumberToBufferPositionRelationship = _sequenceNumber - bufferPosition;
             int originalSequenceNumber = _sequenceNumber;
 
-            if (lastNetBufferEffect != 0 || !_evaluator.TryGetNext(isFinalBuffer && bufferPosition >= bufferLength, ref _sequenceNumber, out TerminalLocation<T> terminal))
+            if (lastNetBufferEffect != 0 || !_evaluator.TryGetNext(isFinalBuffer && bufferPosition >= bufferLength, ref _sequenceNumber, out TerminalLocation<T>? terminal))
             {
                 while (!_evaluator.Accept(buffer[bufferPosition], ref _sequenceNumber, out terminal))
                 {
@@ -54,8 +54,7 @@ namespace Microsoft.TemplateEngine.Core.Matching
                     if (expectedShift == 0)
                     {
                         int actualShift = originalSequenceNumber - _sequenceNumber - 1;
-                        int compensation = actualShift - expectedShift;
-                        bufferPosition -= compensation;
+                        bufferPosition -= actualShift;
                     }
                 }
             }

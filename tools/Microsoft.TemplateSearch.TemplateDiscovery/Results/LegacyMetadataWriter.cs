@@ -37,7 +37,7 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.Results
                                     {
                                         TotalDownloads = r.TotalDownloads,
                                         Owners = r.Owners,
-                                        Verified = r.Verified
+                                        Reserved = r.Reserved
                                     };
                                     return packToTemplateEntry;
                                 });

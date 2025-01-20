@@ -18,7 +18,7 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier.IntegrationTests
         }
 
         [Fact]
-        public async void VerificationEngineFullDevLoop()
+        public async Task VerificationEngineFullDevLoop()
         {
             string workingDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName().Replace(".", string.Empty));
             string snapshotsDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName().Replace(".", string.Empty));
@@ -94,7 +94,7 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier.IntegrationTests
         }
 
         [Fact]
-        public async void VerificationEngineCustomVerifier()
+        public async Task VerificationEngineCustomVerifier()
         {
             string workingDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName().Replace(".", string.Empty));
             string templateDir = "path with spaces";
@@ -146,7 +146,7 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier.IntegrationTests
         }
 
         [Fact]
-        public async void VerificationEngine_DotFile_EditorConfigTests()
+        public async Task VerificationEngine_DotFile_EditorConfigTests()
         {
             TemplateVerifierOptions options = new TemplateVerifierOptions(templateName: "editorconfig")
             {
@@ -156,7 +156,27 @@ namespace Microsoft.TemplateEngine.Authoring.TemplateVerifier.IntegrationTests
 
             VerificationEngine engine = new VerificationEngine(_log);
             // Demonstrate well handling of dot files - workarounding Verify bug https://github.com/VerifyTests/Verify/issues/699
-            await engine.Execute(options).ConfigureAwait(false);
+            await engine.Execute(options);
+        }
+
+        [Fact]
+        public async Task VerificationEngine_InstallsToCustomLocation_WithSettingsDirectorySpecified()
+        {
+            var settingsPath = TestUtils.CreateTemporaryFolder();
+            TemplateVerifierOptions options = new TemplateVerifierOptions(templateName: "editorconfig")
+            {
+                TemplateSpecificArgs = new[] { "--empty" },
+                VerifyCommandOutput = false,
+                SettingsDirectory = settingsPath
+            };
+
+            VerificationEngine engine = new VerificationEngine(_log);
+            Func<Task> executeTask = () => engine.Execute(options);
+            await executeTask
+                .Should()
+                .NotThrowAsync();
+
+            Assert.True(Directory.GetFileSystemEntries(settingsPath).Length != 0);
         }
     }
 }

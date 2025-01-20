@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using Microsoft.TemplateEngine.Abstractions.Constraints;
 
 namespace Microsoft.TemplateEngine.Abstractions.TemplateFiltering
@@ -48,17 +47,17 @@ namespace Microsoft.TemplateEngine.Abstractions.TemplateFiltering
         public static class BuiltIn
         {
             /// <summary>
-            /// Template name <see cref="ITemplateInfo.Name"/>.
+            /// Template name <see cref="ITemplateMetadata.Name"/>.
             /// </summary>
             public const string Name = "Name";
 
             /// <summary>
-            /// Template short names <see cref="ITemplateInfo.ShortNameList"/>.
+            /// Template short names <see cref="ITemplateMetadata.ShortNameList"/>.
             /// </summary>
             public const string ShortName = "ShortName";
 
             /// <summary>
-            /// Template classifications <see cref="ITemplateInfo.Classifications"/>.
+            /// Template classifications <see cref="ITemplateMetadata.Classifications"/>.
             /// </summary>
             public const string Classification = "Classification";
 
@@ -73,12 +72,12 @@ namespace Microsoft.TemplateEngine.Abstractions.TemplateFiltering
             public const string Type = "Type";
 
             /// <summary>
-            /// Template baseline names <see cref="ITemplateInfo.BaselineInfo"/>.
+            /// Template baseline names <see cref="ITemplateMetadata.BaselineInfo"/>.
             /// </summary>
             public const string Baseline = "Baseline";
 
             /// <summary>
-            /// Template author <see cref="ITemplateInfo.Author"/>.
+            /// Template author <see cref="ITemplateMetadata.Author"/>.
             /// </summary>
             public const string Author = "Author";
 

@@ -1,8 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Utils;
 using Newtonsoft.Json.Linq;
@@ -62,7 +60,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.ConfigModel
                 DefaultIfOptionWithoutValue = "true";
             }
 
-            if (DefaultValue == null && IsRequired != true)
+            if (DefaultValue == null && !IsRequired)
             {
                 DefaultValue = ParameterConverter.GetDefault(DataType);
             }
@@ -251,7 +249,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.ConfigModel
                 return null;
             }
 
-            // Attribute parseable as a bool - so we do not want to present it as a condition
+            // Attribute parsable as a bool - so we do not want to present it as a condition
             if (isRequiredToken!.TryParseBool(out _))
             {
                 return null;

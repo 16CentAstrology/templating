@@ -1,8 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Constraints;
 using Microsoft.TemplateEngine.Abstractions.Parameters;
@@ -49,6 +47,9 @@ namespace Microsoft.TemplateSearch.Common
         public IReadOnlyList<string> ShortNameList => TemplateInfo.ShortNameList;
 
         /// <inheritdoc/>
+        bool ITemplateMetadata.PreferDefaultName => TemplateInfo.PreferDefaultName;
+
+        /// <inheritdoc/>
         public string? Author => TemplateInfo.Author;
 
         /// <inheritdoc/>
@@ -74,9 +75,9 @@ namespace Microsoft.TemplateSearch.Common
         public string? ThirdPartyNotices => TemplateInfo.ThirdPartyNotices;
 
         #region implicit ITemplateInfo implementation
-        string? ITemplateInfo.DefaultName => TemplateInfo.DefaultName;
+        string? ITemplateMetadata.DefaultName => TemplateInfo.DefaultName;
 
-        Guid ITemplateInfo.GeneratorId => TemplateInfo.GeneratorId;
+        Guid ITemplateLocator.GeneratorId => TemplateInfo.GeneratorId;
 
         [Obsolete]
         string ITemplateInfo.ShortName => TemplateInfo.ShortName;
@@ -87,22 +88,22 @@ namespace Microsoft.TemplateSearch.Common
         [Obsolete]
         IReadOnlyDictionary<string, ICacheParameter> ITemplateInfo.CacheParameters => TemplateInfo.CacheParameters;
 
-        string ITemplateInfo.MountPointUri => TemplateInfo.MountPointUri;
+        string ITemplateLocator.MountPointUri => TemplateInfo.MountPointUri;
 
-        string ITemplateInfo.ConfigPlace => TemplateInfo.ConfigPlace;
+        string ITemplateLocator.ConfigPlace => TemplateInfo.ConfigPlace;
 
-        string? ITemplateInfo.LocaleConfigPlace => TemplateInfo.LocaleConfigPlace;
+        string? IExtendedTemplateLocator.LocaleConfigPlace => TemplateInfo.LocaleConfigPlace;
 
-        string? ITemplateInfo.HostConfigPlace => TemplateInfo.HostConfigPlace;
+        string? IExtendedTemplateLocator.HostConfigPlace => TemplateInfo.HostConfigPlace;
 
-        IReadOnlyDictionary<string, IBaselineInfo> ITemplateInfo.BaselineInfo => TemplateInfo.BaselineInfo;
+        IReadOnlyDictionary<string, IBaselineInfo> ITemplateMetadata.BaselineInfo => TemplateInfo.BaselineInfo;
 
         [Obsolete]
         bool ITemplateInfo.HasScriptRunningPostActions { get => TemplateInfo.HasScriptRunningPostActions; set => throw new NotImplementedException(); }
 
-        IReadOnlyList<Guid> ITemplateInfo.PostActions => TemplateInfo.PostActions;
+        IReadOnlyList<Guid> ITemplateMetadata.PostActions => TemplateInfo.PostActions;
 
-        IReadOnlyList<TemplateConstraintInfo> ITemplateInfo.Constraints => TemplateInfo.Constraints;
+        IReadOnlyList<TemplateConstraintInfo> ITemplateMetadata.Constraints => TemplateInfo.Constraints;
         #endregion
 
         private ITemplateInfo TemplateInfo { get; }

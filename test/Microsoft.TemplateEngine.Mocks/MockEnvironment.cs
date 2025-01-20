@@ -1,9 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.TemplateEngine.Abstractions;
 
 namespace Microsoft.TemplateEngine.Mocks
@@ -12,7 +9,7 @@ namespace Microsoft.TemplateEngine.Mocks
     {
         private readonly Dictionary<string, string> _environmentVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        public MockEnvironment(Dictionary<string, string> environmentVariablesToOverride = null)
+        public MockEnvironment(Dictionary<string, string>? environmentVariablesToOverride = null)
         {
             var env = Environment.GetEnvironmentVariables();
             foreach (string key in env.Keys.OfType<string>())

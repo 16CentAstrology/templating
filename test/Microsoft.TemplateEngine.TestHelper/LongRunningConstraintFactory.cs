@@ -1,9 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Constraints;
 
@@ -31,7 +28,7 @@ namespace Microsoft.TemplateEngine.TestHelper
 
         public async Task<ITemplateConstraint> CreateTemplateConstraintAsync(IEngineEnvironmentSettings environmentSettings, CancellationToken cancellationToken)
         {
-            await Task.Delay(_msDelay).ConfigureAwait(false);
+            await Task.Delay(_msDelay);
             return new TestConstraint(this);
         }
 

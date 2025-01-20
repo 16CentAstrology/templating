@@ -2,6 +2,34 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="pt-BR" original="../LocalizableStrings.resx">
     <body>
+      <trans-unit id="Authoring_CONFIG0201_PostActionIdIsNotUnique">
+        <source>Id of the post action '{0}' at index '{1}' is not unique. Only the first post action that uses this id will be localized.</source>
+        <target state="translated">Id da ação post '{0}' no índice '{1}' não é único. Somente a primeira ação de postagem que usa esse id será localizada.</target>
+        <note>{0} is any identifier string that user provided in the file. Such as "myPostAction", "firstPostAction", "postAction1" etc.
+{1} is a number representing the zero-based index of the post action. Such as "5", or "0".</note>
+      </trans-unit>
+      <trans-unit id="Authoring_CONFIG0202_PostActionMustHaveActionId">
+        <source>Post action at index '{0}' should have an 'actionId' to declare the action to be executed.</source>
+        <target state="translated">A ação post no índice '{0}' deve ter um 'actionId' para declarar a ação a ser executada.</target>
+        <note>{0} is a whole number representing the zero-based index of the post action. Such as "5" or "0".
+Do not localize: actionId</note>
+      </trans-unit>
+      <trans-unit id="Authoring_CONFIG0203_ManualInstructionIdIsNotUnique">
+        <source>'id' of the manual instruction '{0}' at index {1} is not unique. Only the first manual instruction that uses this id will be localized.</source>
+        <target state="translated">'id' da instrução manual '{0}' no índice {1} não é exclusiva. Apenas a primeira instrução manual que usa esta id será localizada.</target>
+        <note>{0} is any identifier string that user provided in the file. Such as: "myInstruction", "firstInstruction", "instruction1" etc.
+{1} is a whole number representing the zero-based index of the manual instruction. Such as "5", or "0".</note>
+      </trans-unit>
+      <trans-unit id="Authoring_CONFIG0204_UnknownArgumentForReplace">
+        <source>The argument '{0}' configured in '{1}' is not listed in '{2}' and will be skipped for processing.</source>
+        <target state="translated">O argumento '{0}' configurado em '{1}' não está listado em '{2}' e será ignorado para processamento.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Authoring_CyclicDependencyInSymbols">
+        <source>Parameter conditions contain cyclic dependency: [{0}] that is preventing deterministic evaluation.</source>
+        <target state="translated">As condições de parâmetro contêm dependência cíclica: [{0}] que está impedindo a avaliação determinística.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Authoring_InvalidJsonElementInLocalizationFile">
         <source>Localization file should only contain elements with type 'string'. Remove elements that are not strings.</source>
         <target state="translated">O arquivo de localização deve conter somente elementos com o tipo 'cadeia de caracteres'. Remova elementos que não são cadeia de caracteres.</target>
@@ -14,8 +42,8 @@
 {1} is a single-word identifier string. Such as "myPostAction".</note>
       </trans-unit>
       <trans-unit id="Authoring_InvalidMultichoiceSymbol">
-        <source>Choice parameter {0} is invalid. It allows multiple values ('AllowMultipleValues=true'), while some of the configured choices contain separator characters ({1}). Invalid choices: {2}</source>
-        <target state="translated">O parâmetro de {0} é inválido. Ele permite vários valores ('AllowMultipleValues=true'), enquanto algumas das opções configuradas contêm caracteres separadores ({1}). Opções inválidas: {2}</target>
+        <source>Choice parameter '{0}' is invalid. It allows multiple values ('AllowMultipleValues=true'), while some of the configured choices contain separator characters ({1}). Invalid choices: {2}</source>
+        <target state="translated">O parâmetro de escolha ''{0}'' é inválido. Ele permite vários valores ('AllowMultipleValues=true'), enquanto algumas das opções configuradas contêm caracteres da barra de separação ({1}). Opções inválidas: {2}</target>
         <note>{0} is the offending symbol name, {1} is a set of separator characters, {2} is a csv list of offending choice values</note>
       </trans-unit>
       <trans-unit id="Authoring_InvalidPostActionLocalizationIndex">
@@ -33,12 +61,6 @@
         <target state="translated">Uma ou mais ações posteriores têm um valor de instruções manuais malformadas ou ausentes.</target>
         <note />
       </trans-unit>
-      <trans-unit id="Authoring_ManualInstructionIdIsNotUnique">
-        <source>'id' of the manual instruction '{0}' at index {1} is not unique. Only the first manual instruction that uses this id will be localized.</source>
-        <target state="translated">'id' da instrução manual '{0}' no índice {1} não é exclusiva. Apenas a primeira instrução manual que usa esta id será localizada.</target>
-        <note>{0} is any identifier string that user provided in the file. Such as: "myInstruction", "firstInstruction", "instruction1" etc.
-{1} is a whole number representing the zero-based index of the manual instruction. Such as "5", or "0".</note>
-      </trans-unit>
       <trans-unit id="Authoring_MissingValue">
         <source>Missing '{0}'.</source>
         <target state="translated">'{0}' ausente.</target>
@@ -48,18 +70,6 @@
         <source>A non-bool DataType was specified for a regexMatch type symbol</source>
         <target state="translated">Um DataType não booleano foi especificado para um símbolo de tipo regexMatch</target>
         <note />
-      </trans-unit>
-      <trans-unit id="Authoring_PostActionIdIsNotUnique">
-        <source>[{0}]: id of the post action '{1}' at index '{2}' is not unique. Only the first post action that uses this id will be localized.</source>
-        <target state="translated">[{0}]: a id da ação posterior '{1}' no índice '{2}' não é exclusiva. Apenas a primeira ação posterior que usa essa id será localizada.</target>
-        <note>{0} is any identifier string that user provided in the file. Such as "myPostAction", "firstPostAction", "postAction1" etc.
-{1} is a number representing the zero-based index of the post action. Such as "5", or "0".</note>
-      </trans-unit>
-      <trans-unit id="Authoring_PostActionMustHaveActionId">
-        <source>[{0}]: Post action at index '{1}' should have an 'actionId' to declare the action to be executed.</source>
-        <target state="translated">[{0}]: A ação posterior no índice '{1}' deve ter um 'actionId' para declarar a ação a ser executada.</target>
-        <note>{0} is a whole number representing the zero-based index of the post action. Such as "5" or "0".
-Do not localize: actionId</note>
       </trans-unit>
       <trans-unit id="Authoring_SourceDoesNotExist">
         <source>Source '{0}' in template does not exist.</source>
@@ -100,12 +110,12 @@ Detalhes: {1}</target>
       </trans-unit>
       <trans-unit id="BindSymbolEvaluator_Warning_ConversionFailure">
         <source>Bind symbol '{0}': failed to convert value '{1}' to datatype '{2}'. The symbol processing is skipped.</source>
-        <target state="new">Bind symbol '{0}': failed to convert value '{1}' to datatype '{2}'. The symbol processing is skipped.</target>
+        <target state="translated">Símbolo de ligação '{0}': falha ao converter valor '{1}' para tipo de dados '{2}'. O processamento do símbolo é ignorado.</target>
         <note>{0} - the name of symbol in configuration, {1} - obtained value for a symbol, {2} - defined datatype for a symbol</note>
       </trans-unit>
       <trans-unit id="BindSymbolEvaluator_Warning_DefaultValueConversionFailure">
         <source>Bind symbol '{0}': failed to convert default value '{1}' to datatype '{2}'. The default value is skipped.</source>
-        <target state="new">Bind symbol '{0}': failed to convert default value '{1}' to datatype '{2}'. The default value is skipped.</target>
+        <target state="translated">Símbolo de ligação '{0}': falha ao converter o valor padrão '{1}' para tipo de dados '{2}'. O valor padrão é ignorado.</target>
         <note>{0} - the name of symbol in configuration, {1} - default value in configuraion, {2} - defined datatype for a symbol</note>
       </trans-unit>
       <trans-unit id="BindSymbolEvaluator_Warning_EvaluationError">
@@ -119,6 +129,11 @@ Detalhes: {1}</target>
         <note>{0} - binding from template.json configuration
 {1} - the comma separated list of sources (localized values) which define the binding
 {2} - the comma separated list of prefixes that can be used to define the source of the value</note>
+      </trans-unit>
+      <trans-unit id="CoalesceMacro_Exception_MissedVariables">
+        <source>Template authoring error encountered while processing macro '{0}': Variable '{1}'. Neither source nor fallback variable was found.</source>
+        <target state="translated">Erro de criação de modelo encontrado durante o processamento da macro '{0}': Variável '{1}'. Nem a fonte nem a variável de fallback foram encontradas.</target>
+        <note>{0} - macro type, {1} - macro name</note>
       </trans-unit>
       <trans-unit id="EvaluatorSelector_Exception_UnknownEvaluator">
         <source>Unrecognized evaluator: '{0}'.</source>
@@ -146,9 +161,24 @@ Detalhes: {1}</target>
         <note>{0} - name of generated symbol, {1} - the invalid property name; {2}, {3}, {4} - the property names and values.</note>
       </trans-unit>
       <trans-unit id="LocalizationModelDeserializer_Error_FailedToParse">
-        <source>Failed to read parse localization file {0}, it will be skipped from further processing.</source>
-        <target state="translated">Falha ao ler o arquivo de localização {0}, ele será ignorado do processamento posterior.</target>
+        <source>Failed to read or parse localization file {0}, it will be skipped from further processing.</source>
+        <target state="translated">Falha ao ler ou analisar o arquivo de localização {0}, ele será ignorado no processamento posterior.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="LocalizationModelDeserializer_Error_UnknownLocale">
+        <source>Locale '{0}' does not match any known cultures.</source>
+        <target state="translated">A localidade ''{0}'' não corresponde a nenhuma cultura conhecida.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MacroConfig_Exception_AccessToDependencies">
+        <source>The method '{0}' must be called prior '{1}' property reading.</source>
+        <target state="translated">O método '{0}' deve ser chamado antes da leitura da propriedade '{1}'.</target>
+        <note>erty name.</note>
+      </trans-unit>
+      <trans-unit id="MacroProcessing_Warning_DependencyErrors">
+        <source>'{0}' was not processed due to the next issues in dependencies: '{1}'.</source>
+        <target state="translated">'{0}' não foi processado devido aos próximos problemas nas dependências: '{1}'.</target>
+        <note>{0} - macro name, {1} - dependent macros errors</note>
       </trans-unit>
       <trans-unit id="RunnableProjectConfig_OperationSetup_UnknownForm">
         <source>The symbol '{0}': unable to find a form '{1}', the further processing of the symbol will be skipped.</source>

@@ -12,7 +12,6 @@ using Microsoft.TemplateEngine.Orchestrator.RunnableProjects.ConfigModel;
 using Microsoft.TemplateEngine.TestHelper;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Xunit;
 
 namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
 {
@@ -26,7 +25,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_UseBindValuesWithReplace()
+        public async Task CreateAsyncTest_UseBindValuesWithReplace()
         {
             //
             // Template content preparation
@@ -35,6 +34,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             var templateConfig = new
             {
                 identity = "test.template",
+                name = "test",
+                shortName = "test",
                 symbols = new
                 {
                     hostPrefixed = new
@@ -101,7 +102,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = settings.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.FromObject(templateConfig));
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
+
             ParameterSetData parametersData = new ParameterSetData(runnableConfig);
             IDirectory sourceDir = sourceMountPoint!.DirectoryInfo("/")!;
 
@@ -120,7 +122,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_UseBindValuesWithFileRename()
+        public async Task CreateAsyncTest_UseBindValuesWithFileRename()
         {
             //
             // Template content preparation
@@ -129,6 +131,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             var templateConfig = new
             {
                 identity = "test.template",
+                name = "test",
+                shortName = "test",
                 symbols = new
                 {
                     hostPrefixed = new
@@ -171,7 +175,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = settings.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.FromObject(templateConfig));
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(runnableConfig);
             IDirectory sourceDir = sourceMountPoint!.DirectoryInfo("/")!;
 
@@ -190,7 +194,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_UseBindValuesInMacros()
+        public async Task CreateAsyncTest_UseBindValuesInMacros()
         {
             //
             // Template content preparation
@@ -199,6 +203,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             var templateConfig = new
             {
                 identity = "test.template",
+                name = "test",
+                shortName = "test",
                 symbols = new
                 {
                     hostPrefixed = new
@@ -253,7 +259,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = settings.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.FromObject(templateConfig));
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(runnableConfig);
             IDirectory sourceDir = sourceMountPoint!.DirectoryInfo("/")!;
 
@@ -286,7 +292,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_BindingConflict()
+        public async Task CreateAsyncTest_BindingConflict()
         {
             //
             // Template content preparation
@@ -295,6 +301,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             var templateConfig = new
             {
                 identity = "test.template",
+                name = "test",
+                shortName = "test",
                 symbols = new
                 {
                     testBindConflict = new
@@ -337,7 +345,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = settings.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.FromObject(templateConfig));
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(runnableConfig);
             IDirectory sourceDir = sourceMountPoint!.DirectoryInfo("/")!;
 
@@ -357,7 +365,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_ForcedPrefixBinding()
+        public async Task CreateAsyncTest_ForcedPrefixBinding()
         {
             //
             // Template content preparation
@@ -366,6 +374,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             var templateConfig = new
             {
                 identity = "test.template",
+                name = "test",
+                shortName = "test",
                 symbols = new
                 {
                     notPrefixed = new
@@ -408,7 +418,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = settings.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.FromObject(templateConfig));
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(runnableConfig);
             IDirectory sourceDir = sourceMountPoint!.DirectoryInfo("/")!;
 
@@ -428,7 +438,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_CanUseDefaultValue()
+        public async Task CreateAsyncTest_CanUseDefaultValue()
         {
             //
             // Template content preparation
@@ -437,6 +447,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             var templateConfig = new
             {
                 identity = "test.template",
+                name = "test",
+                shortName = "test",
                 symbols = new
                 {
                     hostPrefixed = new
@@ -499,7 +511,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = settings.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.FromObject(templateConfig));
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(runnableConfig);
             IDirectory sourceDir = sourceMountPoint!.DirectoryInfo("/")!;
 
@@ -518,7 +530,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_CanConvertValueToDataType()
+        public async Task CreateAsyncTest_CanConvertValueToDataType()
         {
             //
             // Template content preparation
@@ -597,7 +609,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_NoWarningOnUnknownBindingWithDefaultValue()
+        public async Task CreateAsyncTest_NoWarningOnUnknownBindingWithDefaultValue()
         {
             //
             // Template content preparation
@@ -675,7 +687,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             string resultContent = settings.Host.FileSystem.ReadAllText(Path.Combine(targetDir, "sourceFile"));
             Assert.Equal(expectedSnippet, resultContent);
 
-            (LogLevel, string Message) warningMessage = Assert.Single(loggedMessages.Where(lm => lm.Level == LogLevel.Warning));
+            (LogLevel, string Message) warningMessage = Assert.Single(loggedMessages, lm => lm.Level == LogLevel.Warning);
             Assert.Equal("Failed to evaluate bind symbol 'env2', it will be skipped.", warningMessage.Message);
             Assert.Contains(loggedMessages, lm => lm.Message == "Failed to evaluate bind symbol 'env1', the returned value is null. The default value 'envDefault' is used instead.");
         }
@@ -695,7 +707,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
 
             public int Priority => 0;
 
-            public Guid Id { get; private set; }
+            public Guid Id { get; }
 
             public bool RequiresPrefixMatch { get; }
 

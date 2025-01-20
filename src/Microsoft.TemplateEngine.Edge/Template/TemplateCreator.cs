@@ -1,14 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
-using Microsoft.TemplateEngine.Abstractions.Mount;
 using Microsoft.TemplateEngine.Abstractions.Parameters;
 using Microsoft.TemplateEngine.Utils;
 
@@ -79,7 +73,6 @@ namespace Microsoft.TemplateEngine.Edge.Template
         /// <param name="dryRun">If true, only dry run will be performed - no actual actions will be done.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
         public async Task<ITemplateCreationResult> InstantiateAsync(
             ITemplateInfo templateInfo,
             string? name,
@@ -90,20 +83,58 @@ namespace Microsoft.TemplateEngine.Edge.Template
             string? baselineName = null,
             bool dryRun = false,
             CancellationToken cancellationToken = default)
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
         {
             _ = templateInfo ?? throw new ArgumentNullException(nameof(templateInfo));
             inputParameters?.VerifyInputData();
             inputParameters ??= new InputDataSet(templateInfo);
             cancellationToken.ThrowIfCancellationRequested();
 
-            ITemplate? template = LoadTemplate(templateInfo, baselineName);
+            using ITemplate? template = await LoadTemplateAsync(templateInfo, baselineName, cancellationToken).ConfigureAwait(false);
+
             if (template == null)
             {
                 return new TemplateCreationResult(CreationResultStatus.NotFound, templateInfo.Name, LocalizableStrings.TemplateCreator_TemplateCreationResult_Error_CouldNotLoadTemplate);
             }
 
-            string? realName = name ?? fallbackName ?? template.DefaultName;
+            ValidationUtils.LogValidationResults(_environmentSettings.Host.Logger, new[] { template });
+
+            if (!template.IsValid)
+            {
+                return new TemplateCreationResult(
+                        CreationResultStatus.TemplateIssueDetected, template.Name, LocalizableStrings.TemplateCreator_TemplateCreationResult_Error_InvalidTemplate);
+            }
+
+            string? realName = null;
+            if (!string.IsNullOrEmpty(name))
+            {
+                realName = name;
+            }
+            else if (templateInfo.PreferDefaultName)
+            {
+                if (string.IsNullOrEmpty(templateInfo.DefaultName))
+                {
+                    return new TemplateCreationResult(
+                        CreationResultStatus.TemplateIssueDetected, template.Name, LocalizableStrings.TemplateCreator_TemplateCreationResult_Error_NoDefaultName);
+                }
+                realName = templateInfo.DefaultName;
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(fallbackName))
+                {
+                    if (!string.IsNullOrEmpty(templateInfo.DefaultName))
+                    {
+                        realName = templateInfo.DefaultName;
+                    }
+                }
+                else
+                {
+                    realName = fallbackName;
+                }
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (string.IsNullOrWhiteSpace(realName))
             {
                 return new TemplateCreationResult(CreationResultStatus.MissingMandatoryParam, template.Name, "--name");
@@ -121,7 +152,6 @@ namespace Microsoft.TemplateEngine.Edge.Template
                 {
                     _environmentSettings.Host.FileSystem.CreateDirectory(targetDir);
                 }
-                IComponentManager componentManager = _environmentSettings.Components;
 
                 // setup separate sets of parameters to be used for GetCreationEffects() and by CreateAsync().
                 if (!TryCreateParameterSet(template, realName!, inputParameters, out IParameterSetData? effectParams, out TemplateCreationResult? resultIfParameterCreationFailed))
@@ -196,60 +226,47 @@ namespace Microsoft.TemplateEngine.Edge.Template
             }
             finally
             {
-#pragma warning disable CS0618 // Type or member is obsolete - temporary until the method becomes internal.
-                ReleaseMountPoints(template);
-#pragma warning restore CS0618 // Type or member is obsolete
                 contentGeneratorBlock.Dispose();
             }
         }
 
-        [Obsolete("The method is deprecated.")]
-        //This method should become internal once Cli help logic is refactored.
-        public void ReleaseMountPoints(ITemplate template)
+        /// <summary>
+        /// Fully load template from <see cref="ITemplateInfo"/>.
+        /// <see cref="ITemplateInfo"/> usually comes from cache and is missing some information.
+        /// Calling this methods returns full information about template needed to instantiate template.
+        /// </summary>
+        /// <param name="info">Information about template.</param>
+        /// <param name="baselineName">Defines which baseline of template to load.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>Fully loaded template or <c>null</c> if it fails to load template.</returns>
+        internal Task<ITemplate?> LoadTemplateAsync(ITemplateInfo info, string? baselineName, CancellationToken cancellationToken)
         {
-            if (template == null)
+            if (!_environmentSettings.Components.TryGetComponent(info.GeneratorId, out IGenerator? generator))
             {
-                return;
+                return Task.FromResult((ITemplate?)null);
             }
-
-            template.LocaleConfiguration?.MountPoint.Dispose();
-
-            template.Configuration?.MountPoint.Dispose();
-
-            if (template.TemplateSourceRoot != null && template.TemplateSourceRoot != template.Configuration)
+            using (Timing.Over(_environmentSettings.Host.Logger, $"Template from config {info.MountPointUri}{info.ConfigPlace}"))
             {
-                template.TemplateSourceRoot.MountPoint.Dispose();
+                return generator!.LoadTemplateAsync(_environmentSettings, ToITemplateLocator(info), baselineName, cancellationToken);
             }
         }
 
-        /// <summary>
-        /// Reads the parameters from the template and the host and setup their values in the return IParameterSet.
-        /// Host param values override template defaults.
-        /// </summary>
-        /// <param name="templateInfo"></param>
-        /// <param name="realName"></param>
-        /// <param name="paramsWithInvalidValues"></param>
-        /// <returns></returns>
-        [Obsolete("This method is deprecated.")]
-        //This method should become internal once Cli help logic is refactored.
-        public IParameterSet SetupDefaultParamValuesFromTemplateAndHost(ITemplate templateInfo, string realName, out IReadOnlyList<string> paramsWithInvalidValues)
+        private static IEnumerable<string> ExceptionMessages(Exception? e)
         {
-            return (IParameterSet)SetupDefaultParamValuesFromTemplateAndHostInternal(templateInfo, realName, out paramsWithInvalidValues);
+            while (e != null)
+            {
+                yield return e.Message;
+                e = e.InnerException;
+            }
         }
 
-        /// <summary>
-        /// The template params for which there are same-named input parameters have their values set to the corresponding input parameters value.
-        /// input parameters that do not have corresponding template params are ignored.
-        /// </summary>
-        /// <param name="template"></param>
-        /// <param name="templateParams"></param>
-        /// <param name="inputParameters"></param>
-        /// <param name="paramsWithInvalidValues"></param>
-        [Obsolete("This method is deprecated.")]
-        //This method should become internal once Cli help logic is refactored.
-        public void ResolveUserParameters(ITemplate template, IParameterSet templateParams, IReadOnlyDictionary<string, string?> inputParameters, out IReadOnlyList<string> paramsWithInvalidValues)
+        private static IExtendedTemplateLocator ToITemplateLocator(ITemplateInfo templateInfo)
         {
-            ResolveUserParameters(template, new LegacyParamSetWrapper(templateParams), templateParams.ToInputDataSet(), out paramsWithInvalidValues);
+            return new TemplateLocator(templateInfo.GeneratorId, templateInfo.MountPointUri, templateInfo.ConfigPlace)
+            {
+                LocaleConfigPlace = templateInfo.LocaleConfigPlace,
+                HostConfigPlace = templateInfo.HostConfigPlace,
+            };
         }
 
         private bool AnyParametersWithInvalidDefaultsUnresolved(IReadOnlyList<string> defaultParamsWithInvalidValues, InputDataSet inputParameters, out IReadOnlyList<string> invalidDefaultParameters)
@@ -327,99 +344,6 @@ namespace Microsoft.TemplateEngine.Edge.Template
             }
         }
 
-        /// <summary>
-        /// Fully load template from <see cref="ITemplateInfo"/>.
-        /// <see cref="ITemplateInfo"/> usually comes from cache and is missing some information.
-        /// Calling this methods returns full information about template needed to instantiate template.
-        /// </summary>
-        /// <param name="info">Information about template.</param>
-        /// <param name="baselineName">Defines which baseline of template to load.</param>
-        /// <returns>Fully loaded template or <c>null</c> if it fails to load template.</returns>
-#pragma warning disable SA1202 // Elements should be ordered by access
-        public ITemplate? LoadTemplate(ITemplateInfo info, string? baselineName)
-#pragma warning restore SA1202 // Elements should be ordered by access
-        {
-            if (!_environmentSettings.Components.TryGetComponent(info.GeneratorId, out IGenerator? generator))
-            {
-                return null;
-            }
-            if (!_environmentSettings.TryGetMountPoint(info.MountPointUri, out IMountPoint? mountPoint))
-            {
-                return null;
-            }
-            IFile? config = mountPoint!.FileInfo(info.ConfigPlace);
-            if (config == null)
-            {
-                return null;
-            }
-            IFile? localeConfig = string.IsNullOrEmpty(info.LocaleConfigPlace) ? null : mountPoint.FileInfo(info.LocaleConfigPlace!);
-            IFile? hostTemplateConfigFile = string.IsNullOrEmpty(info.HostConfigPlace) ? null : mountPoint.FileInfo(info.HostConfigPlace!);
-            using (Timing.Over(_environmentSettings.Host.Logger, $"Template from config {config.MountPoint.MountPointUri}{config.FullPath}"))
-            {
-                if (generator!.TryGetTemplateFromConfigInfo(config, out ITemplate? template, localeConfig, hostTemplateConfigFile, baselineName))
-                {
-                    return template;
-                }
-                else
-                {
-                    //TODO: Log the failure to read the template info
-                }
-            }
-
-            return null;
-        }
-
-        private static IEnumerable<string> ExceptionMessages(Exception? e)
-        {
-            while (e != null)
-            {
-                yield return e.Message;
-                e = e.InnerException;
-            }
-        }
-
-        /// <summary>
-        /// Checks that all required parameters are provided. If a missing one is found, a value may be provided via host.OnParameterError
-        /// but it's up to the caller / UI to decide how to act.
-        /// Returns true if there are any missing params, false otherwise.
-        /// </summary>
-        /// <param name="templateParams"></param>
-        /// <param name="parametersBuilder"></param>
-        /// <param name="missingParamNames"></param>
-        /// <returns></returns>
-        private bool CheckForMissingRequiredParameters(InputDataSet templateParams, IParameterSetBuilder parametersBuilder, out IList<string> missingParamNames)
-        {
-            ITemplateEngineHost host = _environmentSettings.Host;
-            bool anyMissingParams = false;
-            missingParamNames = new List<string>();
-
-            foreach (InputParameterData evaluatedParameterData in templateParams.Values.Where(v => v.GetEvaluatedPrecedence() == EvaluatedPrecedence.Required && v.InputDataState == InputDataState.Unset))
-            {
-                string? newParamValue;
-                const int _MAX_RETRIES = 3;
-                int retries = 0;
-#pragma warning disable CS0618 // Type or member is obsolete - for backward compatibility
-                while (host.OnParameterError(evaluatedParameterData.ParameterDefinition, string.Empty, "Missing required parameter", out newParamValue)
-#pragma warning restore CS0618 // Type or member is obsolete
-                       && string.IsNullOrEmpty(newParamValue)
-                       && ++retries < _MAX_RETRIES)
-                {
-                }
-
-                if (!string.IsNullOrEmpty(newParamValue))
-                {
-                    parametersBuilder.SetParameterValue(evaluatedParameterData.ParameterDefinition, newParamValue!, DataSource.HostOnError);
-                }
-                else
-                {
-                    missingParamNames.Add(evaluatedParameterData.ParameterDefinition.Name);
-                    anyMissingParams = true;
-                }
-            }
-
-            return anyMissingParams;
-        }
-
         private InputDataSet? EvaluateConditionalParameters(
             IParameterSetBuilder parametersBuilder,
             InputDataSet inputParameters,
@@ -429,7 +353,7 @@ namespace Microsoft.TemplateEngine.Edge.Template
         {
             if (!inputParameters.HasConditions())
             {
-                paramsWithInvalidValues = Array.Empty<string>();
+                paramsWithInvalidValues = [];
                 isExternalEvaluationInvalid = false;
                 return parametersBuilder.Build(false, template.Generator, _logger);
             }
@@ -447,7 +371,7 @@ namespace Microsoft.TemplateEngine.Edge.Template
                         template.Generator, _logger, !inputParameters.ContinueOnMismatchedConditionsEvaluation, out paramsWithInvalidValues))
                 {
                     _logger.LogInformation(
-                        "Parameters conditions ('IsEnbaled', 'IsRequired') evaluation supplied by host didn't match validation against internal evaluation for following parameters: [{0}]. Host requested to continue in such case: {1}",
+                        "Parameters conditions ('IsEnabled', 'IsRequired') evaluation supplied by host didn't match validation against internal evaluation for following parameters: [{0}]. Host requested to continue in such case: {1}",
                         paramsWithInvalidValues.ToCsvString(),
                         inputParameters.ContinueOnMismatchedConditionsEvaluation);
 
@@ -503,11 +427,13 @@ namespace Microsoft.TemplateEngine.Edge.Template
                 return false;
             }
 
-            bool missingParams = CheckForMissingRequiredParameters(evaluatedParams!, parameterSetBuilder, out IList<string> missingParamNames);
+            IEnumerable<string> missingParams = evaluatedParams!.Values
+                .Where(v => v.GetEvaluatedPrecedence() == EvaluatedPrecedence.Required && v.InputDataState == InputDataState.Unset)
+                .Select(v => v.ParameterDefinition.Name);
 
-            if (missingParams)
+            if (missingParams.Any())
             {
-                failureResult = new TemplateCreationResult(CreationResultStatus.MissingMandatoryParam, template.Name, string.Join(", ", missingParamNames));
+                failureResult = new TemplateCreationResult(CreationResultStatus.MissingMandatoryParam, template.Name, string.Join(", ", missingParams));
                 templateParams = null;
                 return false;
             }
@@ -516,6 +442,60 @@ namespace Microsoft.TemplateEngine.Edge.Template
 
             failureResult = null;
             return true;
+        }
+
+        #region Obsolete members
+
+        /// <summary>
+        /// Fully load template from <see cref="ITemplateInfo"/>.
+        /// <see cref="ITemplateInfo"/> usually comes from cache and is missing some information.
+        /// Calling this methods returns full information about template needed to instantiate template.
+        /// </summary>
+        /// <param name="info">Information about template.</param>
+        /// <param name="baselineName">Defines which baseline of template to load.</param>
+        /// <returns>Fully loaded template or <c>null</c> if it fails to load template.</returns>
+#pragma warning disable SA1202 // Elements should be ordered by access
+        [Obsolete("The method is obsolete and won't be replaced. Use InstantiateAsync to run the template.")]
+        public ITemplate? LoadTemplate(ITemplateInfo info, string? baselineName)
+#pragma warning restore SA1202 // Elements should be ordered by access
+        {
+            return Task.Run(async () => await LoadTemplateAsync(info, baselineName, default).ConfigureAwait(false)).GetAwaiter().GetResult();
+        }
+
+        [Obsolete("The method is deprecated.")]
+        //This method should become internal once Cli help logic is refactored.
+        public void ReleaseMountPoints(ITemplate template)
+        {
+        }
+
+        /// <summary>
+        /// Reads the parameters from the template and the host and setup their values in the return IParameterSet.
+        /// Host param values override template defaults.
+        /// </summary>
+        /// <param name="templateInfo"></param>
+        /// <param name="realName"></param>
+        /// <param name="paramsWithInvalidValues"></param>
+        /// <returns></returns>
+        [Obsolete("This method is deprecated.")]
+        //This method should become internal once Cli help logic is refactored.
+        public IParameterSet SetupDefaultParamValuesFromTemplateAndHost(ITemplate templateInfo, string realName, out IReadOnlyList<string> paramsWithInvalidValues)
+        {
+            return (IParameterSet)SetupDefaultParamValuesFromTemplateAndHostInternal(templateInfo, realName, out paramsWithInvalidValues);
+        }
+
+        /// <summary>
+        /// The template params for which there are same-named input parameters have their values set to the corresponding input parameters value.
+        /// input parameters that do not have corresponding template params are ignored.
+        /// </summary>
+        /// <param name="template"></param>
+        /// <param name="templateParams"></param>
+        /// <param name="inputParameters"></param>
+        /// <param name="paramsWithInvalidValues"></param>
+        [Obsolete("This method is deprecated.")]
+        //This method should become internal once Cli help logic is refactored.
+        public void ResolveUserParameters(ITemplate template, IParameterSet templateParams, IReadOnlyDictionary<string, string?> inputParameters, out IReadOnlyList<string> paramsWithInvalidValues)
+        {
+            ResolveUserParameters(template, new LegacyParamSetWrapper(templateParams), templateParams.ToInputDataSet(), out paramsWithInvalidValues);
         }
 
         /// <summary>
@@ -549,6 +529,27 @@ namespace Microsoft.TemplateEngine.Edge.Template
             public void SetParameterEvaluation(ITemplateParameter parameter, EvaluatedInputParameterData evaluatedParameterData) => throw new NotImplementedException();
 
             public void SetParameterValue(ITemplateParameter parameter, object value, DataSource dataSource) => _parameterSet.ResolvedValues[parameter] = value;
+        }
+        #endregion
+
+        private class TemplateLocator : IExtendedTemplateLocator
+        {
+            public TemplateLocator(Guid generatorId, string mountPointUri, string configPlace)
+            {
+                GeneratorId = generatorId;
+                MountPointUri = mountPointUri;
+                ConfigPlace = configPlace;
+            }
+
+            public Guid GeneratorId { get; }
+
+            public string MountPointUri { get; }
+
+            public string ConfigPlace { get; }
+
+            public string? LocaleConfigPlace { get; init; }
+
+            public string? HostConfigPlace { get; init; }
         }
     }
 }

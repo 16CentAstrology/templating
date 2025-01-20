@@ -1,12 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-#if !NETFULL
+#if NET
 using System.Runtime.Loader;
 #endif
 using Microsoft.Extensions.Logging;
@@ -39,6 +35,7 @@ namespace Microsoft.TemplateEngine.Edge.Settings
         /// <remarks>
         /// The mount point will not be disposed by the <see cref="Scanner"/>. Use <see cref="ScanResult.Dispose"/> to dispose mount point.
         /// </remarks>
+        [Obsolete("Use ScanAsync instead.")]
         public ScanResult Scan(string mountPointUri)
         {
             return Scan(mountPointUri, scanForComponents: true);
@@ -50,6 +47,8 @@ namespace Microsoft.TemplateEngine.Edge.Settings
         /// <remarks>
         /// The mount point will not be disposed by the <see cref="Scanner"/>. Use <see cref="ScanResult.Dispose"/> to dispose mount point.
         /// </remarks>
+        ///
+        [Obsolete("Use ScanAsync instead.")]
         public ScanResult Scan(string mountPointUri, bool scanForComponents)
         {
             if (string.IsNullOrWhiteSpace(mountPointUri))
@@ -62,12 +61,50 @@ namespace Microsoft.TemplateEngine.Edge.Settings
             {
                 ScanForComponents(source);
             }
-            return ScanMountPointForTemplatesAndLangpacks(source);
+            return Task.Run(async () => await ScanMountPointForTemplatesAsync(source, default).ConfigureAwait(false)).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Scans mount point for templates.
+        /// </summary>
+        /// <remarks>
+        /// The mount point will not be disposed by the <see cref="Scanner"/>. Use <see cref="ScanResult.Dispose"/> to dispose mount point.
+        /// </remarks>
+        public Task<ScanResult> ScanAsync(string mountPointUri, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(mountPointUri))
+            {
+                throw new ArgumentException($"{nameof(mountPointUri)} should not be null or empty");
+            }
+            MountPointScanSource source = GetOrCreateMountPointScanInfoForInstallSource(mountPointUri);
+            cancellationToken.ThrowIfCancellationRequested();
+            return ScanMountPointForTemplatesAsync(source, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Scans mount point for templates.
+        /// </summary>
+        /// <remarks>
+        /// The mount point will not be disposed by the <see cref="Scanner"/>. Use <see cref="ScanResult.Dispose"/> to dispose mount point.
+        /// </remarks>
+        public Task<ScanResult> ScanAsync(
+            string mountPointUri,
+            bool logValidationResults = true,
+            bool returnInvalidTemplates = false,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(mountPointUri))
+            {
+                throw new ArgumentException($"{nameof(mountPointUri)} should not be null or empty");
+            }
+            MountPointScanSource source = GetOrCreateMountPointScanInfoForInstallSource(mountPointUri);
+            cancellationToken.ThrowIfCancellationRequested();
+            return ScanMountPointForTemplatesAsync(source, logValidationResults, returnInvalidTemplates, cancellationToken);
         }
 
         private MountPointScanSource GetOrCreateMountPointScanInfoForInstallSource(string sourceLocation)
         {
-            foreach (IMountPointFactory factory in _environmentSettings.Components.OfType<IMountPointFactory>().ToList())
+            foreach (IMountPointFactory factory in _environmentSettings.Components.OfType<IMountPointFactory>())
             {
                 if (factory.TryMount(_environmentSettings, null, sourceLocation, out IMountPoint? mountPoint))
                 {
@@ -184,32 +221,33 @@ namespace Microsoft.TemplateEngine.Edge.Settings
             return true;
         }
 
-        private ScanResult ScanMountPointForTemplatesAndLangpacks(MountPointScanSource source)
+        private async Task<ScanResult> ScanMountPointForTemplatesAsync(
+            MountPointScanSource source,
+            bool logValidationResults = true,
+            bool returnInvalidTemplates = false,
+            CancellationToken cancellationToken = default)
         {
             _ = source ?? throw new ArgumentNullException(nameof(source));
-            // look for things to install
 
-            var templates = new List<ITemplate>();
-            var localizationLocators = new List<ILocalizationLocator>();
-
+            var templates = new List<IScanTemplateInfo>();
             foreach (IGenerator generator in _environmentSettings.Components.OfType<IGenerator>())
             {
-                IList<ITemplate> templateList = generator.GetTemplatesAndLangpacksFromDir(source.MountPoint, out IList<ILocalizationLocator> localizationInfo);
+                IReadOnlyList<IScanTemplateInfo> templateList = await generator.GetTemplatesFromMountPointAsync(source.MountPoint, cancellationToken).ConfigureAwait(false);
 
-                foreach (ILocalizationLocator locator in localizationInfo)
+                if (logValidationResults)
                 {
-                    localizationLocators.Add(locator);
+                    _logger.LogDebug("Scanning mount point '{0}' by generator '{1}': found {2} templates", source.MountPoint.MountPointUri, generator.Id, templateList.Count);
+                    ValidationUtils.LogValidationResults(_logger, templateList);
                 }
 
-                foreach (ITemplate template in templateList)
-                {
-                    templates.Add(template);
-                }
-
-                source.FoundTemplates |= templateList.Count > 0 || localizationInfo.Count > 0;
+                IEnumerable<IScanTemplateInfo> validTemplates = templateList.Where(t => t.IsValid || returnInvalidTemplates);
+                templates.AddRange(validTemplates);
+                source.FoundTemplates |= validTemplates.Any();
             }
 
-            return new ScanResult(source.MountPoint, templates, localizationLocators, Array.Empty<(string, Type, IIdentifiedComponent)>());
+            //backward compatibility
+            var localizationLocators = templates.SelectMany(t => t.Localizations.Values.Where(li => li.IsValid || returnInvalidTemplates)).ToList();
+            return new ScanResult(source.MountPoint, templates, localizationLocators, []);
         }
 
         /// <summary>
@@ -235,16 +273,14 @@ namespace Microsoft.TemplateEngine.Edge.Settings
                 {
                     Assembly? assembly = null;
 
-#if !NETFULL
-                    if (file.IndexOf("netcoreapp", StringComparison.OrdinalIgnoreCase) > -1 || file.IndexOf("netstandard", StringComparison.OrdinalIgnoreCase) > -1)
+#if NET
+                    if (file.IndexOf("netcoreapp", StringComparison.OrdinalIgnoreCase) > -1)
                     {
-                        using (Stream fileStream = _environmentSettings.Host.FileSystem.OpenRead(file))
-                        {
-                            assembly = AssemblyLoadContext.Default.LoadFromStream(fileStream);
-                        }
+                        using Stream fileStream = _environmentSettings.Host.FileSystem.OpenRead(file);
+                        assembly = AssemblyLoadContext.Default.LoadFromStream(fileStream);
                     }
 #else
-                    if (file.IndexOf("net4", StringComparison.OrdinalIgnoreCase) > -1)
+                    if (file.IndexOf("netstandard", StringComparison.OrdinalIgnoreCase) > -1 || file.IndexOf("net4", StringComparison.OrdinalIgnoreCase) > -1)
                     {
                         byte[] fileBytes = _environmentSettings.Host.FileSystem.ReadAllBytes(file);
                         assembly = Assembly.Load(fileBytes);
@@ -286,8 +322,6 @@ namespace Microsoft.TemplateEngine.Edge.Settings
             public bool FoundComponents { get; set; }
 
             public bool FoundTemplates { get; set; }
-
-            public bool AnythingFound => FoundTemplates || FoundComponents;
         }
     }
 }

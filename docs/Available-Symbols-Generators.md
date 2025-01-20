@@ -4,6 +4,38 @@ The supported symbol types are:
 - Derived - defines transformation of another symbol.  The value of this symbol is derived from the value of another symbol by applying the defined form.
 - Computed - the boolean value is evaluated during the processing of the template based on the other symbol values.
 - Generated - the value is computed by a built-in symbol value generator.
+There are no restrictions on symbol order: e.g. generated/computed/derived symbols can be used in any type of other symbols. The only rule is in avoiding circular dependencies such as:
+```json
+"symbols": {
+  "switchCheck": {
+    "type": "generated",
+    "generator": "switch",
+    "datatype": "string",
+    "parameters": {
+      "evaluator": "C++",
+      "cases": [
+        {
+          "condition": "(switchCheck2 == 'regions')",
+          "value": "regions"
+        }
+      ]
+    }
+  },
+  "switchCheck2": {
+    "type": "generated",
+    "generator": "switch",
+    "datatype": "string",
+    "parameters": {
+      "evaluator": "C++",
+      "cases": [
+        {
+          "condition": "(switchCheck == 'regions')",
+          "value": "regions"
+        }
+      ]
+    }
+  }  
+```
 This article covers available generators for generated symbols.
 
 To use a generated symbol inside your `template.json` file:
@@ -21,7 +53,7 @@ This is a sample of definition of a generated symbol, the `port` generator, that
 },   
 ```
 
-Most of the generators need to be configured via parameters that let you select the source of the data and select among the options available. Below is a sample of a symbol that use the `now` generator to replace a fixed year indication present in the source files with the current year.
+Most of the generators need to be configured via parameters that let you select the source of the data and select among the options available. Below is a sample of a symbol that uses the `now` generator to replace a fixed year indication present in the source files with the current year.
 
 ```json
 "copyrightYear": {
@@ -611,14 +643,14 @@ This sample will rename folder called `Api` into `Source/Api/Microsoft/Visual St
 
 `Program.cs`:
 ```C#
-// This file is generated for platfrom: SupportedPlatforms
+// This file is generated for platform: SupportedPlatforms
 ```
 
 This sample will expand and join values of `Platform` argument and replace `SupportedPlatforms` string with `MacOS, iOS`:
 
 `Program.cs`:
 ```C#
-// This file is generated for platfrom: MacOS, iOS
+// This file is generated for platform: MacOS, iOS
 ```
 
 ### Related

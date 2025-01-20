@@ -2,12 +2,9 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>$(NETCoreTargetFramework)</TargetFramework>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <Description>A dotnet CLI tool with commands for template authoring.</Description>
     <IsPackable>true</IsPackable>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-template-authoring</ToolCommandName>
   </PropertyGroup>
@@ -23,21 +20,19 @@
   <ItemGroup>
     <ProjectReference Include="$(ToolsDir)Microsoft.TemplateEngine.TemplateLocalizer.Core\Microsoft.TemplateEngine.TemplateLocalizer.Core.csproj" />
     <ProjectReference Include="$(ToolsDir)Microsoft.TemplateEngine.Authoring.TemplateVerifier\Microsoft.TemplateEngine.Authoring.TemplateVerifier.csproj" />
+    <ProjectReference Include="$(SrcDir)Microsoft.TemplateEngine.Orchestrator.RunnableProjects\Microsoft.TemplateEngine.Orchestrator.RunnableProjects.csproj" />
     <ProjectReference Include="$(SrcDir)Microsoft.TemplateEngine.Utils\Microsoft.TemplateEngine.Utils.csproj" />
+    <ProjectReference Include="$(SrcDir)Microsoft.TemplateEngine.Edge\Microsoft.TemplateEngine.Edge.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="LocalizableStrings.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>LocalizableStrings.resx</DependentUpon>
-    </Compile>
+    <EmbeddedResource Update="LocalizableStrings.resx"
+                      GenerateSource="true" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="LocalizableStrings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <InternalsVisibleTo Include="Microsoft.TemplateEngine.Authoring.CLI.IntegrationTests" Key="$(TemplateEnginePublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.TemplateEngine.Authoring.CLI.UnitTests" Key="$(TemplateEnginePublicKey)" />
   </ItemGroup>
+
 </Project>

@@ -1,11 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Mount;
 using Microsoft.TemplateEngine.Abstractions.Parameters;
@@ -16,7 +11,6 @@ using Microsoft.TemplateEngine.TestHelper;
 using Microsoft.TemplateEngine.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Xunit;
 
 namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
 {
@@ -30,7 +24,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_GuidsMacroProcessingCaseSensitivity()
+        public async Task CreateAsyncTest_GuidsMacroProcessingCaseSensitivity()
         {
             //
             // Template content preparation
@@ -40,6 +34,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             string contentFileNamePrefix = "content - ";
             TemplateConfigModel config = new TemplateConfigModel("test")
             {
+                Name = "test",
+                ShortNameList = new[] { "test" },
                 Guids = new List<Guid>()
                 {
                     inputTestGuid
@@ -69,7 +65,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
 
             TestFileSystemUtils.WriteTemplateSource(environment, sourceBasePath, templateSourceFiles);
             using IMountPoint sourceMountPoint = environment.MountPath(sourceBasePath);
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, config, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, config, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(runnableConfig);
             IDirectory sourceDir = sourceMountPoint!.DirectoryInfo("/")!;
 
@@ -106,6 +102,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         private const string TemplateConfigQuotelessLiteralsNotEnabled = /*lang=json*/ """
         {
             "identity": "test.template",
+            "name": "test",
+            "shortName": "test",
             "symbols": {
                 "ChoiceParam": {
                   "type": "parameter",
@@ -135,6 +133,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
 
             {
                 "identity": "test.template",
+                "name": "test",
+                "shortName": "test",
                 "symbols": {
                     "ChoiceParam": {
                       "type": "parameter",
@@ -165,7 +165,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         [Theory]
         [InlineData(TemplateConfigQuotelessLiteralsNotEnabled, "UNKNOWN")]
         [InlineData(TemplateConfigQuotelessLiteralsEnabled, "SECOND")]
-        public async void CreateAsyncTest_ConditionWithUnquotedChoiceLiteral(string templateConfig, string expectedResult)
+        public async Task CreateAsyncTest_ConditionWithUnquotedChoiceLiteral(string templateConfig, string expectedResult)
         {
             //
             // Template content preparation
@@ -203,7 +203,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = environment.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromString(templateConfig);
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(
                 runnableConfig,
                 new Dictionary<string, string?>() { { "ChoiceParam", "SecondChoice" } });
@@ -224,7 +224,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_MultiChoiceParamReplacingAndCondition()
+        public async Task CreateAsyncTest_MultiChoiceParamReplacingAndCondition()
         {
             //
             // Template content preparation
@@ -233,6 +233,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             string templateConfig = /*lang=json*/ """
                 {
                     "identity": "test.template",
+                    "name": "test",
+                    "shortName": "test",
                     "symbols": {    
                         "ChoiceParam": {
                           "type": "parameter",
@@ -301,7 +303,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = environment.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromString(templateConfig);
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(
                 runnableConfig,
                 new Dictionary<string, object?>() { { "ChoiceParam", new MultiValueParameter(new[] { "SecondChoice", "ThirdChoice" }) } });
@@ -322,7 +324,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_MultiChoiceParamAndConditionMacro()
+        public async Task CreateAsyncTest_MultiChoiceParamAndConditionMacro()
         {
             //
             // Template content preparation
@@ -448,7 +450,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = environment.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromString(templateConfig);
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(
                 runnableConfig,
                 new Dictionary<string, object?>() { { "Platform", new MultiValueParameter(new[] { "android", "iOS" }) } });
@@ -469,7 +471,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void CreateAsyncTest_MultiChoiceParamJoining()
+        public async Task CreateAsyncTest_MultiChoiceParamJoining()
         {
             //
             // Template content preparation
@@ -478,6 +480,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             string templateConfig = /*lang=json*/ """
                 {
                   "identity": "test.template",
+                  "name": "test",
+                  "shortName": "test",
                   "symbols": {
                     "Platform": {
                       "type": "parameter",
@@ -559,7 +563,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = environment.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromString(templateConfig);
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(environment, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(
                 runnableConfig,
                 new Dictionary<string, object?>() { { "Platform", new MultiValueParameter(new[] { "MacOS", "iOS" }) } });
@@ -580,7 +584,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
         }
 
         [Fact]
-        public async void Test_CoaleseWithInvalidSetup()
+        public async Task Test_CoaleseWithInvalidSetup()
         {
             //
             // Template content preparation
@@ -589,6 +593,8 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             var templateConfig = new
             {
                 identity = "test.template",
+                name = "test",
+                shortName = "test",
                 symbols = new
                 {
                     safesourcename = new
@@ -632,7 +638,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = settings.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new RunnableProjectGenerator();
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.FromObject(templateConfig));
-            RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parametersData = new ParameterSetData(runnableConfig);
             IDirectory sourceDir = sourceMountPoint!.DirectoryInfo("/")!;
 
@@ -653,7 +659,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
 #pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "https://github.com/dotnet/templating/issues/4988")]
 #pragma warning restore xUnit1004 // Test methods should not be skipped
-        public async void XMLConditionFailure()
+        public async Task XMLConditionFailure()
         {
             //
             // Template content preparation
@@ -717,7 +723,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             RunnableProjectGenerator rpg = new();
 
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.FromObject(templateConfig));
-            RunnableProjectConfig runnableConfig = new(settings, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parameters = new(
                 runnableConfig,
                 new Dictionary<string, object?>() { { "A", true } });
@@ -739,7 +745,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
 #pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "https://github.com/dotnet/templating/issues/4988")]
 #pragma warning restore xUnit1004 // Test methods should not be skipped
-        public async void HashConditionFailure()
+        public async Task HashConditionFailure()
         {
             //
             // Template content preparation
@@ -802,7 +808,7 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.UnitTests
             using IMountPoint sourceMountPoint = settings.MountPath(sourceBasePath);
             RunnableProjectGenerator rpg = new();
             TemplateConfigModel configModel = TemplateConfigModel.FromJObject(JObject.FromObject(templateConfig));
-            RunnableProjectConfig runnableConfig = new(settings, rpg, configModel, sourceMountPoint.Root);
+            using RunnableProjectConfig runnableConfig = new RunnableProjectConfig(settings, rpg, configModel, sourceMountPoint.Root);
             ParameterSetData parameters = new(
                 runnableConfig,
                 new Dictionary<string, object?>() { { "A", true } });

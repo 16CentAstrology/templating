@@ -1,8 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions.PhysicalFileSystem;
 
@@ -66,30 +64,6 @@ namespace Microsoft.TemplateEngine.Abstractions
         void VirtualizeDirectory(string path);
 
         #region Obsolete
-
-        [Obsolete("Use " + nameof(Logger) + " instead.")]
-        void LogTiming(string label, TimeSpan duration, int depth);
-
-        [Obsolete("Use " + nameof(Logger) + " instead.")]
-        void LogMessage(string message);
-
-        [Obsolete("Use " + nameof(Logger) + " instead.")]
-        void OnCriticalError(string code, string message, string currentFile, long currentPosition);
-
-        [Obsolete("Use " + nameof(Logger) + " instead.")]
-        bool OnNonCriticalError(string code, string message, string currentFile, long currentPosition);
-
-        [Obsolete("The method is deprecated.")]
-        bool OnParameterError(ITemplateParameter parameter, string receivedValue, string message, out string? newValue);
-
-        [Obsolete("The method is deprecated.")]
-        void OnSymbolUsed(string symbol, object value);
-
-        [Obsolete("Use " + nameof(Logger) + " instead.")]
-        void LogDiagnosticMessage(string message, string category, params string[] details);
-
-        [Obsolete("The method is deprecated.")]
-        bool OnConfirmPartialMatch(string name);
 
         /// <summary>
         /// Action to be done when potentially destructive changes on template instantiation are detected.

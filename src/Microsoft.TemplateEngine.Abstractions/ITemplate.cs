@@ -8,7 +8,7 @@ namespace Microsoft.TemplateEngine.Abstractions
     /// <summary>
     /// Defines the template that can be run by <see cref="IGenerator"/>.
     /// </summary>
-    public interface ITemplate : ITemplateInfo
+    public interface ITemplate : ITemplateInfo, IValidationInfo, IDisposable
     {
         /// <summary>
         /// Gets generator that runs the template.
@@ -26,6 +26,11 @@ namespace Microsoft.TemplateEngine.Abstractions
         IFileSystemInfo? LocaleConfiguration { get; }
 
         /// <summary>
+        /// Gets host configuration file system entry.
+        /// </summary>
+        IFileSystemInfo? HostSpecificConfiguration { get; }
+
+        /// <summary>
         /// Gets directory with template source files.
         /// </summary>
         IDirectory TemplateSourceRoot { get; }
@@ -34,5 +39,10 @@ namespace Microsoft.TemplateEngine.Abstractions
         /// Indicates whether he template should be created in a subdirectory under the output directory.
         /// </summary>
         bool IsNameAgreementWithFolderPreferred { get; }
+
+        /// <summary>
+        /// Gets localization information set for the template.
+        /// </summary>
+        ILocalizationLocator? Localization { get; }
     }
 }

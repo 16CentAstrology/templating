@@ -21,8 +21,9 @@ namespace Microsoft.TemplateEngine.Abstractions.Parameters
         HostDefault,
 
         /// <summary>
-        /// Value obtained via <see cref="ITemplateEngineHost.OnParameterError"/>.
+        /// Value obtained via ITemplateEngineHost.OnParameterError.
         /// </summary>
+        [Obsolete("The value is not used anymore due to ITemplateEngineHost.OnParameterError was removed.")]
         HostOnError,
 
         /// <summary>

@@ -11,9 +11,23 @@ insert_final_newline = true
 indent_style = space
 indent_size = 4
 trim_trailing_whitespace = true
+spelling_exclusion_path = exclusion.dic
 
 # JSON files
 [*.json]
+indent_size = 2
+
+# Xml config files
+[*.{props,targets,config,nuspec}]
+indent_size = 2
+
+# Xml files
+[*.{xml,stylecop,resx,ruleset}]
+indent_size = 2
+
+# Xml project files
+[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]
+charset = utf-8
 indent_size = 2
 
 # Generated code
@@ -180,10 +194,16 @@ dotnet_diagnostic.IDE0010.severity = suggestion
 dotnet_diagnostic.IDE0021.severity = suggestion
 #Use expression body for methods
 dotnet_diagnostic.IDE0022.severity = suggestion
+#Use collection initializers
+dotnet_diagnostic.IDE0028.severity = suggestion
 #Use auto-implemented property
 dotnet_diagnostic.IDE0032.severity = suggestion
+#Add accessibility modifiers
+dotnet_diagnostic.IDE0040.severity = suggestion
 #Use conditional expression for return
 dotnet_diagnostic.IDE0046.severity = suggestion
+#Remove unused private member
+dotnet_diagnostic.IDE0051.severity = suggestion
 #Remove unnecessary expression value
 dotnet_diagnostic.IDE0058.severity = suggestion
 #Add missing cases to switch expression
@@ -196,6 +216,16 @@ dotnet_diagnostic.IDE0130.severity = suggestion
 dotnet_diagnostic.IDE0160.severity = suggestion
 #top-level-statements
 dotnet_diagnostic.IDE0210.severity = suggestion
+#Use primary constructor
+dotnet_diagnostic.IDE0290.severity = suggestion
+#Collection initialization can be simplified
+dotnet_diagnostic.IDE0300.severity = suggestion
+#Collection initialization can be simplified
+dotnet_diagnostic.IDE0301.severity = suggestion
+#Collection initialization can be simplified
+dotnet_diagnostic.IDE0305.severity = suggestion
+#Collection initialization can be simplified
+dotnet_diagnostic.IDE0306.severity = suggestion
 
 # License header
 file_header_template = Licensed to the .NET Foundation under one or more agreements.\nThe .NET Foundation licenses this file to you under the MIT license.
@@ -649,3 +679,6 @@ dotnet_analyzer_diagnostic.severity = none
 
 [*.txt]
 insert_final_newline = false
+
+[test/**/{Approvals,Snapshots}/**]
+trim_trailing_whitespace = false

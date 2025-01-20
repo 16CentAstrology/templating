@@ -1,10 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.TemplateEngine.Abstractions;
@@ -22,7 +18,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
         private static readonly IOperatorMap<Operators, TTokens> Map = Instance.GenerateMap();
         private static readonly bool DereferenceInLiteralsSetting = Instance.DereferenceInLiterals;
         private static readonly string NullToken = Instance.NullTokenValue;
-        private static readonly IOperationProvider[] NoOperationProviders = Array.Empty<IOperationProvider>();
+        private static readonly IOperationProvider[] NoOperationProviders = [];
 
         protected abstract string NullTokenValue { get; }
 
@@ -30,7 +26,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
 
         public static bool Evaluate(IProcessorState processor, ref int bufferLength, ref int currentBufferPosition, out bool faulted)
         {
-            bool result = Evaluate(processor, ref bufferLength, ref currentBufferPosition, out string faultedMessage, null, false);
+            bool result = Evaluate(processor, ref bufferLength, ref currentBufferPosition, out string? faultedMessage, null, false);
             faulted = !string.IsNullOrEmpty(faultedMessage);
             return result;
         }
@@ -39,39 +35,64 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
         /// Inspect the passed string, creates the expression, substitutes parameters within expression, evaluates substituted expression and returns result.
         /// If non-null bag for variable references is passed, it will be populated with references of variables used within the evaluable expression.
         /// </summary>
-        /// <param name="logger"></param>
+        /// <param name="logger">The logger to be used to log the messages during evaluation.</param>
         /// <param name="text">The string to be inspected and turned into expression.</param>
         /// <param name="variables">Variables to be substituted within the expression.</param>
-        /// <returns></returns>
+        /// <returns>A boolean value indicating the result of the evaluation.</returns>
         public static bool EvaluateFromString(ILogger logger, string text, IVariableCollection variables)
         {
-            return EvaluateFromString(logger, text, variables, out string _, null);
+            return EvaluateFromString(logger, text, variables, out string? _, null);
         }
 
         /// <summary>
         /// Inspect the passed string, creates the expression, substitutes parameters within expression, evaluates substituted expression and returns result.
         /// If non-null bag for variable references is passed, it will be populated with references of variables used within the evaluable expression.
         /// </summary>
-        /// <param name="logger"></param>
+        /// <param name="logger">The logger to be used to log the messages during evaluation.</param>
         /// <param name="text">The string to be inspected and turned into expression.</param>
         /// <param name="variables">Variables to be substituted within the expression.</param>
         /// <param name="faultedMessage">Error message detailing failing evaluation, should it fail.</param>
         /// <param name="referencedVariablesKeys">If passed (if not null) it will be populated with references to variables used within the inspected expression.</param>
-        /// <returns></returns>
-        public static bool EvaluateFromString(ILogger logger, string text, IVariableCollection variables, out string faultedMessage, HashSet<string> referencedVariablesKeys = null)
+        /// <returns>A boolean value indicating the result of the evaluation.</returns>
+        public static bool EvaluateFromString(ILogger logger, string text, IVariableCollection variables, out string? faultedMessage, HashSet<string>? referencedVariablesKeys = null)
         {
-            using (MemoryStream ms = new(Encoding.UTF8.GetBytes(text)))
-            using (MemoryStream res = new())
-            {
-                EngineConfig cfg = new(logger, variables);
-                IProcessorState state = new ProcessorState(ms, res, (int)ms.Length, (int)ms.Length, cfg, NoOperationProviders);
-                int len = (int)ms.Length;
-                int pos = 0;
-                return Evaluate(state, ref len, ref pos, out faultedMessage, referencedVariablesKeys, true);
-            }
+            using MemoryStream ms = new(Encoding.UTF8.GetBytes(text));
+            using MemoryStream res = new();
+            EngineConfig cfg = new(logger, variables);
+            IProcessorState state = new ProcessorState(ms, res, (int)ms.Length, (int)ms.Length, cfg, NoOperationProviders);
+            int len = (int)ms.Length;
+            int pos = 0;
+            return Evaluate(state, ref len, ref pos, out faultedMessage, referencedVariablesKeys, true);
         }
 
-        protected static int Compare(object left, object right)
+        /// <summary>
+        /// Creates the evaluable expression based on passed string,
+        /// collects used symbols in the expression and reports if any errors occurs on expression creation.
+        /// </summary>
+        /// <param name="logger">The logger to be used to log the messages during building the evaluable expression.</param>
+        /// <param name="text">The string to be inspected and turned into expression.</param>
+        /// <param name="variables">Variables to be substituted within the expression.</param>
+        /// <param name="evaluableExpressionError">Error message detailing failing building evaluable expression.</param>
+        /// <param name="referencedVariablesKeys">If passed (if not null) it will be populated with references to variables used within the inspected expression.</param>
+        /// <returns>Evaluable expression that represents decomposed <paramref name="text"></paramref>.</returns>
+        public static IEvaluable? GetEvaluableExpression(
+            ILogger logger,
+            string text,
+            IVariableCollection variables,
+            out string? evaluableExpressionError,
+            HashSet<string> referencedVariablesKeys)
+        {
+            using MemoryStream ms = new(Encoding.UTF8.GetBytes(text));
+            using MemoryStream res = new();
+            EngineConfig cfg = new(logger, variables);
+            IProcessorState state = new ProcessorState(ms, res, (int)ms.Length, (int)ms.Length, cfg, NoOperationProviders);
+            int len = (int)ms.Length;
+            int pos = 0;
+
+            return GetEvaluableExpression(state, ref len, ref pos, out evaluableExpressionError, referencedVariablesKeys);
+        }
+
+        protected static int Compare(object? left, object? right)
         {
             if (Equals(right, NullToken))
             {
@@ -87,7 +108,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
                    ?? AttemptBooleanComparison(left, right)
                    ?? AttemptVersionComparison(left, right)
                    ?? AttemptMultiValueComparison(left, right)
-                   ?? AttemptLexographicComparison(left, right)
+                   ?? AttemptLexicographicComparison(left, right)
                    ?? AttemptComparableComparison(left, right)
                    ?? 0;
         }
@@ -96,25 +117,43 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
 
         protected abstract ITokenTrie GetSymbols(IProcessorState processor);
 
-        private static bool Evaluate(
+        private static IEvaluable? GetEvaluableExpression(
             IProcessorState processor,
             ref int bufferLength,
             ref int currentBufferPosition,
-            out string faultedMessage,
-            HashSet<string> referencedVariablesKeys,
-            // indicates whether passed buffer within processor contains only the analyzed expression,
-            //  or it can possibly contain other content (e.g. the full template)
-            bool shouldProcessWholeBuffer)
+            out string? faultedMessage,
+            HashSet<string> referencedVariablesKeys)
         {
             faultedMessage = null;
             ITokenTrie tokens = Instance.GetSymbols(processor);
             ScopeBuilder<Operators, TTokens> builder = processor.ScopeBuilder(tokens, Map, DereferenceInLiteralsSetting);
-            string faultedSection = null;
-            IEvaluable expression = builder.Build(
+            string? faultedSection = null;
+
+            return builder.Build(
                 ref bufferLength,
                 ref currentBufferPosition,
                 x => faultedSection = processor.Encoding.GetString(x.ToArray()),
                 referencedVariablesKeys);
+        }
+
+        private static bool Evaluate(
+            IProcessorState processor,
+            ref int bufferLength,
+            ref int currentBufferPosition,
+            out string? faultedMessage,
+            HashSet<string>? referencedVariablesKeys,
+            // indicates whether passed buffer within processor contains only the analyzed expression,
+            //  or it can possibly contain other content (e.g. the full template)
+            bool shouldProcessWholeBuffer)
+        {
+            string? faultedSection = null;
+
+            IEvaluable? expression = GetEvaluableExpression(
+                processor,
+                ref bufferLength,
+                ref currentBufferPosition,
+                out faultedMessage,
+                referencedVariablesKeys ?? new HashSet<string>());
 
             bool result;
             if (faultedSection != null)
@@ -137,7 +176,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
 
                 try
                 {
-                    object evalResult = expression.Evaluate();
+                    object? evalResult = expression?.Evaluate();
                     result = (bool)Convert.ChangeType(evalResult, typeof(bool));
                 }
                 catch (Exception e)
@@ -156,10 +195,10 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
             return result;
         }
 
-        private static int? AttemptBooleanComparison(object left, object right)
+        private static int? AttemptBooleanComparison(object? left, object? right)
         {
-            bool leftIsBool = Map.TryConvert(left, out bool lb);
-            bool rightIsBool = Map.TryConvert(right, out bool rb);
+            bool leftIsBool = Map.TryConvert(left!, out bool lb);
+            bool rightIsBool = Map.TryConvert(right!, out bool rb);
 
             if (!leftIsBool || !rightIsBool)
             {
@@ -169,7 +208,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
             return lb.CompareTo(rb);
         }
 
-        private static int? AttemptComparableComparison(object left, object right)
+        private static int? AttemptComparableComparison(object? left, object? right)
         {
             if (left is not IComparable ls || right is not IComparable rs)
             {
@@ -179,9 +218,9 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
             return ls.CompareTo(rs);
         }
 
-        private static int? AttemptMultiValueComparison(object left, object right)
+        private static int? AttemptMultiValueComparison(object? left, object? right)
         {
-            if (MultiValueParameter.TryPerformMultiValueEqual(left, right, out bool result))
+            if (MultiValueParameter.TryPerformMultiValueEqual(left!, right!, out bool result))
             {
                 return result ? 0 : -1;
             }
@@ -189,7 +228,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
             return null;
         }
 
-        private static int? AttemptLexographicComparison(object left, object right)
+        private static int? AttemptLexicographicComparison(object? left, object? right)
         {
             if (left is not string ls || right is not string rs)
             {
@@ -199,14 +238,14 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
             return string.Compare(ls, rs, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static int? AttemptNumericComparison(object left, object right)
+        private static int? AttemptNumericComparison(object? left, object? right)
         {
-            bool leftIsDouble = Map.TryConvert(left, out double ld);
-            bool rightIsDouble = Map.TryConvert(right, out double rd);
+            bool leftIsDouble = Map.TryConvert(left!, out double ld);
+            bool rightIsDouble = Map.TryConvert(right!, out double rd);
 
             if (!leftIsDouble)
             {
-                if (!Map.TryConvert(left, out long ll))
+                if (!Map.TryConvert(left!, out long ll))
                 {
                     return null;
                 }
@@ -216,7 +255,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
 
             if (!rightIsDouble)
             {
-                if (!Map.TryConvert(right, out long rl))
+                if (!Map.TryConvert(right!, out long rl))
                 {
                     return null;
                 }
@@ -227,9 +266,9 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
             return ld.CompareTo(rd);
         }
 
-        private static int? AttemptVersionComparison(object left, object right)
+        private static int? AttemptVersionComparison(object? left, object? right)
         {
-            Version lv = left as Version;
+            Version? lv = left as Version;
 
             if (lv == null)
             {
@@ -239,7 +278,7 @@ namespace Microsoft.TemplateEngine.Core.Expressions.Shared
                 }
             }
 
-            Version rv = right as Version;
+            Version? rv = right as Version;
 
             if (rv == null)
             {

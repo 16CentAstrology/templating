@@ -1,8 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
-
 namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.OperationConfig
 {
     internal class OperationConfigDefault
@@ -105,10 +103,12 @@ namespace Microsoft.TemplateEngine.Orchestrator.RunnableProjects.OperationConfig
                         new OperationConfigDefault("**/*.jsx", "{/*", EvaluatorType.CPP, ConditionalType.JsxBlockComment),
                         new OperationConfigDefault("**/*.tsx", "{/*", EvaluatorType.CPP, ConditionalType.JsxBlockComment),
                         new OperationConfigDefault("**/*.xml", "<!--", EvaluatorType.CPP, ConditionalType.Xml),
+                        new OperationConfigDefault("**/*.appxmanifest", "<!--", EvaluatorType.CPP, ConditionalType.Xml),
                         new OperationConfigDefault("**/*.resx", "<!--", EvaluatorType.CPP, ConditionalType.Xml),
                         new OperationConfigDefault("**/*.bas", "'", EvaluatorType.VB, ConditionalType.VB),
                         new OperationConfigDefault("**/*.vb", "'", EvaluatorType.VB, ConditionalType.VB),
                         new OperationConfigDefault("**/*.xaml", "<!--", EvaluatorType.CPP, ConditionalType.Xml),
+                        new OperationConfigDefault("**/*.axaml", "<!--", EvaluatorType.CPP, ConditionalType.Xml),
                         new OperationConfigDefault("**/*.sln", "#-", EvaluatorType.CPP, ConditionalType.HashSignLineComment),
                         new OperationConfigDefault("**/*.yaml", "#-", EvaluatorType.CPP, ConditionalType.HashSignLineComment),
                         new OperationConfigDefault("**/*.yml", "#-", EvaluatorType.CPP, ConditionalType.HashSignLineComment),

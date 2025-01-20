@@ -1,11 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Installer;
 using Microsoft.TemplateEngine.Abstractions.TemplatePackage;
@@ -58,14 +53,19 @@ namespace Microsoft.TemplateEngine.Edge.Installers.Folder
             {
                 //on installation we update last modification date to trigger package rebuild.
                 //on folder package update the date may not change.
-                return Task.FromResult(InstallResult.CreateSuccess(installRequest, new FolderManagedTemplatePackage(_settings, this, provider, installRequest.PackageIdentifier, DateTime.UtcNow)));
+                return Task.FromResult(InstallResult.CreateSuccess(
+                    installRequest,
+                    new FolderManagedTemplatePackage(_settings, this, provider, installRequest.PackageIdentifier, DateTime.UtcNow),
+                    []));
             }
             else
             {
-                return Task.FromResult(InstallResult.CreateFailure(
+                return Task.FromResult(
+                    InstallResult.CreateFailure(
                     installRequest,
                     InstallerErrorCode.PackageNotFound,
-                    string.Format(LocalizableStrings.FolderInstaller_InstallResult_Error_FolderDoesNotExist, installRequest.PackageIdentifier)));
+                    string.Format(LocalizableStrings.FolderInstaller_InstallResult_Error_FolderDoesNotExist, installRequest.PackageIdentifier),
+                    []));
             }
         }
 
@@ -95,7 +95,10 @@ namespace Microsoft.TemplateEngine.Edge.Installers.Folder
             _ = updateRequest ?? throw new ArgumentNullException(nameof(updateRequest));
 
             // update installation date
-            return Task.FromResult(UpdateResult.CreateSuccess(updateRequest, new FolderManagedTemplatePackage(_settings, this, provider, updateRequest.TemplatePackage.Identifier, DateTime.UtcNow)));
+            return Task.FromResult(UpdateResult.CreateSuccess(
+                updateRequest,
+                new FolderManagedTemplatePackage(_settings, this, provider, updateRequest.TemplatePackage.Identifier, DateTime.UtcNow),
+                []));
         }
     }
 }

@@ -21,7 +21,7 @@ the `template.json` file. This requires that a few changes have to be done on th
 ```
 
 The templates can be packaged to a NuGet package for further distribution.
-A tutorial on how to create the template package can be find [here](https://learn.microsoft.com/en-us/dotnet/core/tutorials/cli-templates-create-template-package).
+A tutorial on how to create the template package can be found [here](https://learn.microsoft.com/en-us/dotnet/core/tutorials/cli-templates-create-template-package).
 
 
 |Category|Description|  
@@ -35,9 +35,9 @@ A tutorial on how to create the template package can be find [here](https://lear
 |---|---|---|
 |`identity`|A unique name for this template|yes|
 |`author`|The author of the template|no|
-|`classifications`|Zero or more characteristics of the template which may be used in search. In this field you define the values shown as Tags in `dotnet new`|no|
+|<a name="classifications"></a>`classifications`| Zero or more characteristics of the template which are shown in the tabular output of `dotnet new list` and `dotnet new search` as "Tags". It is possible to filter the templates based on them using `--tag` option. In Visual Studio those items are shown in New Project Dialog in the available list of templates together with template name, description and language. Common classifications are: `Library`, `Test`, `Web` etc. |no|
 |`name`|The name for the template. This is displayed as the template name when using `dotnet new` and Visual Studio.|yes|
-|`groupIdentity`|The ID of the group this template belongs to. This allows multiple templates to be displayed as one, with the the decision for which one to use based on the template options. |no|
+|`groupIdentity`|The ID of the group this template belongs to. This allows multiple templates to be displayed as one, with the decision for which one to use based on the template options. See more information on templates grouping in [this article](./Using-Group-Identity.md). |no|
 |`tags`|You can use tags to improve the metadata of your project. Well-known tags are: `language` and `type`. To specify the template language, use the tag `language`. To specify the template type, use the tag `type`. Supported types are: `project`, `item`, `solution`.|no|
 |`shortName`|A name for selecting the template in CLI environment. This is the name shown as `Short Name` in `dotnet new` list of templates, and is the name to use to run this template. It is possible to specify multiple short names for the single template, and then any of them can be used to instantiate the template. The first element of the array is considered as the primary and first choice in scenarios where only single value is allowed (for example in tab completion of `dotnet new`). Be mindful when selecting the short name and using synonyms to avoid conflicts with other templates - the template short name should be unique. In case multiple template with the same short name are installed at the same time, the user won't be able to use any of them until one of the packages is uninstalled making the short name unique again. This doesn't apply for the templates that are part of the same group (have same `groupIdentity`). |yes|
 |`postActions`|Enables actions to be performed after the project is created. See [the article](Post-Action-Registry.md) on post actions for more details.|no|
@@ -492,6 +492,7 @@ See [the article](Binding-and-project-context-evaluation.md#bind-symbols).
 |Name|Description|Default|Mandatory|
 |---|---|---|---|
 |`sourceName`| The text in the source content to replace with the name the user specifies. The value to be replaced with can be given using the `-n` `--name` options while running a template. The template engine will look for any occurrence of the `sourceName` present in the config file and replace it in file names and file contents. If no name is specified by the host, the current directory is used. The value of the `sourceName` is available in built-in `name` symbol and can be used as the source for creating other symbols and condition expressions. Due to implicit forms applied to `sourceName` it is important to select the replacement that doesn't cause the conflicts. See more details about `sourceName` in [the article](Naming-and-default-value-forms.md)||no|
+|`preferDefaultName`| Boolean value that decides which name will be used if no `--name` is specified during creation. If `false` it will use the fallback name (output folder name), if `true` it will use the template's `defaultName`. If no `defaultName` and no fallback name is specified and `preferDefaultName` is set to `true`, the template creation will not succeed with a `TemplateIssueDetected` exception. | If not specified, `false` is used. | no
 |`preferNameDirectory`| Boolean value, indicates whether to create a directory for the template if name is specified but an output directory is not set (instead of creating the content directly in the current directory).|If not specified, `false` is used.|no|
 |`placeholderFilename`|A filename that will be completely ignored, used to indicate that its containing directory should be copied. This allows creation of empty directory in the created template, by having a corresponding source directory containing just the placeholder file. By default, empty directories are ignored.|If not specified, a default value of `"-.-"` is used.|no|
 |`primaryOutputs`|A list of template files for further processing by the host (including post-actions). The path should contain the relative path to the file prior to the symbol based renaming that may happen during template generation. It is defined as an array of [Primary Outputs](#primary-output-definition)||no|
@@ -543,6 +544,30 @@ The configuration details options are identical in both situations, they only di
 |`operations.condition`|A boolean expression whose result determines whether or not to use this custom operation. If this is not provided, the operation is used.|no|
 |`operations.configuration`|The details of the operation configuration. Each type of operation has its own configuration options, as detailed below.|yes|
 
+SpecialCustomOperations can be used for adding conditions for handling files with extensions not listed in [Conditional processing and comment syntax](../docs/Conditional-processing-and-comment-syntax.md#introduction).
+
+```JSON
+{
+  "SpecialCustomOperations": {
+    "**.axml": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "endif": [ "#endif", "<!--#endif" ],
+            "actionableIf": [ "<!--#if" ],
+            "actionableElse": [ "#else", "<!--#else" ],
+            "actionableElseif": [ "#elseif", "<!--#elseif", "#elif", "<!--#elif" ],
+            "trim": true,
+            "wholeLine": true,
+            "evaluator": "C++"
+          }
+        }
+      ]
+    }
+  }
+}
+```
 
 #### Balanced nesting
 This operation type is designed to be used in conjunction with a conditional operation, to help maintain the proper commenting on conditional, and the text they may optionally emit. See the section on configuring a custom conditional operation for more details.

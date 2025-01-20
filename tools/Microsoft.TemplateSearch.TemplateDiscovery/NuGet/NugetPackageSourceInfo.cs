@@ -25,15 +25,15 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.NuGet
             Version = version;
         }
 
-        public string Name { get; private set; }
+        public string Name { get; }
 
-        public string Version { get; private set; }
+        public string Version { get; }
 
         public long TotalDownloads { get; private set; }
 
-        public IReadOnlyList<string> Owners { get; private set; } = Array.Empty<string>();
+        public IReadOnlyList<string> Owners { get; private set; } = [];
 
-        public bool Verified { get; private set; }
+        public bool Reserved { get; private set; }
 
         public string? Description { get; private set; }
 
@@ -47,8 +47,8 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.NuGet
             NuGetPackageSourceInfo sourceInfo = new NuGetPackageSourceInfo(id, version)
             {
                 TotalDownloads = entry.ToInt32("totalDownloads"),
-                Owners = entry.Get<JToken>("owners").JTokenStringOrArrayToCollection(Array.Empty<string>()),
-                Verified = entry.ToBool("verified"),
+                Owners = entry.Get<JToken>("owners").JTokenStringOrArrayToCollection([]),
+                Reserved = entry.ToBool("verified"),
                 Description = entry.ToString("description"),
                 IconUrl = entry.ToString("iconUrl")
             };

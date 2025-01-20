@@ -1,5 +1,16 @@
-﻿<Project>
+﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project>
+
   <PropertyGroup>
+    <ValidateTemplates Condition="'$(ValidateTemplates)' == ''">true</ValidateTemplates>
+
+    <!-- 
+      The directory containing your templates to be validated.
+      All the folders under this directory will be searched for "/.template.config/template.json" files.
+      If not provided, the directory from which the build was initiated will be used.
+    -->
+    
+    <ValidateTemplatesPath Condition="'$(ValidateTemplatesPath)' == ''">.</ValidateTemplatesPath>
 
     <!-- 
       Set this to true to create and update your templatestrings.xx.json files based on the content of your templates.json files. 
@@ -20,6 +31,6 @@
       Below line was added as a reference.
     -->
     <TemplateLanguages Condition="'$(TemplateLanguages)' == ''"></TemplateLanguages>
-
   </PropertyGroup>
+
 </Project>

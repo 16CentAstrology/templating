@@ -45,8 +45,7 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
         public async Task AllStringsAreWrittenToFile()
         {
             CancellationTokenSource cts = new CancellationTokenSource(10000);
-            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "tr" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token)
-                .ConfigureAwait(false);
+            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "tr" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token);
 
             string expectedFilename = Path.Combine(_workingDirectory, "templatestrings.tr.json");
             Assert.True(File.Exists(expectedFilename));
@@ -54,7 +53,7 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
             // Only the specified language file should be generated (no more than 1 file in the directory).
             _ = Assert.Single(Directory.EnumerateFileSystemEntries(_workingDirectory));
 
-            Dictionary<string, string> resultStrings = await ReadTemplateStringsFromJsonFile(expectedFilename, cts.Token).ConfigureAwait(false);
+            Dictionary<string, string> resultStrings = await ReadTemplateStringsFromJsonFile(expectedFilename, cts.Token);
 
             // All the InputStrings should be in the resultStrings
             Assert.True(InputStrings.All(i => resultStrings.TryGetValue(i.LocalizationKey, out var value) && value == i.Value));
@@ -69,8 +68,7 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
         public async Task DryRunPreventsWritingToFileSystem()
         {
             CancellationTokenSource cts = new CancellationTokenSource(10000);
-            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "tr" }, _workingDirectory, dryRun: true, NullLogger.Instance, cts.Token)
-                .ConfigureAwait(false);
+            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "tr" }, _workingDirectory, dryRun: true, NullLogger.Instance, cts.Token);
 
             string expectedFilename = Path.Combine(_workingDirectory, "templatestrings.tr.json");
             Assert.False(File.Exists(expectedFilename));
@@ -80,14 +78,13 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
         public async Task StringOrderIsPreserved()
         {
             CancellationTokenSource cts = new CancellationTokenSource(10000);
-            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "tr" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token)
-                .ConfigureAwait(false);
+            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "tr" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token);
 
             string expectedFilename = Path.Combine(_workingDirectory, "templatestrings.tr.json");
             Assert.True(File.Exists(expectedFilename));
 
             using FileStream locFileStream = File.OpenRead(expectedFilename);
-            JsonDocument locFile = await JsonDocument.ParseAsync(locFileStream).ConfigureAwait(false);
+            JsonDocument locFile = await JsonDocument.ParseAsync(locFileStream);
 
             int inputIndex = 0;
             foreach (JsonProperty property in locFile.RootElement.EnumerateObject())
@@ -116,12 +113,11 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
     ""name"": ""existing translations should be preserved."",
     ""_name.comment"": ""comments should be preserved.""
 }",
-                cts.Token).ConfigureAwait(false);
+                cts.Token);
 
-            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "tr" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token)
-                .ConfigureAwait(false);
+            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "tr" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token);
 
-            string fileContent = await File.ReadAllTextAsync(expectedFilename, cts.Token).ConfigureAwait(false);
+            string fileContent = await File.ReadAllTextAsync(expectedFilename, cts.Token);
 
             Assert.Contains("existing translations should be preserved.", fileContent);
             Assert.Contains("comments should be preserved.", fileContent);
@@ -139,12 +135,11 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
 {
     ""name"": ""existing translations in authoring language should be removed.""
 }",
-                cts.Token).ConfigureAwait(false);
+                cts.Token);
 
-            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "en" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token)
-                .ConfigureAwait(false);
+            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "en" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token);
 
-            string fileContent = await File.ReadAllTextAsync(expectedFilename, cts.Token).ConfigureAwait(false);
+            string fileContent = await File.ReadAllTextAsync(expectedFilename, cts.Token);
 
             Assert.DoesNotContain("existing translations in authoring language should be removed.", fileContent);
         }
@@ -182,7 +177,7 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
                 }
 
                 jsonWriter.WriteEndObject();
-                await jsonWriter.FlushAsync(cts.Token).ConfigureAwait(false);
+                await jsonWriter.FlushAsync(cts.Token);
             }
 
             // Open the file and allow subsequent readings, but prevent writing.
@@ -191,8 +186,7 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
 
             // Attempt to update the previously created json to see if it will be overwritten.
             // The content is identical. So we can read, but we shouldn't write to the file after this point.
-            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "fr" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token)
-                .ConfigureAwait(false);
+            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "fr" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token);
 
             // An exception will be thrown, failing the test, if the call above tries to write to the file.
             // The execution should reach this point if the call did not try to write to the file, which indicates success for the test.
@@ -211,12 +205,11 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
     ""name"": ""existing translations should be discarded."",
     ""_name.comment"": ""comments should be preserved.""
 }",
-                cts.Token).ConfigureAwait(false);
+                cts.Token);
 
-            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "en" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token)
-                .ConfigureAwait(false);
+            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "en" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token);
 
-            string fileContent = await File.ReadAllTextAsync(expectedFilename, cts.Token).ConfigureAwait(false);
+            string fileContent = await File.ReadAllTextAsync(expectedFilename, cts.Token);
 
             Assert.DoesNotContain("existing translations should be discarded.", fileContent);
             Assert.Contains("Class library", fileContent);
@@ -241,8 +234,7 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
                 _workingDirectory,
                 dryRun: false,
                 NullLogger.Instance,
-                cts.Token)
-                .ConfigureAwait(false);
+                cts.Token);
 
             string expectedFilename = Path.Combine(_workingDirectory, "templatestrings.it.json");
             string fileContent = File.ReadAllText(expectedFilename);
@@ -251,8 +243,7 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
             Assert.DoesNotContain("\\u00A0", fileContent, StringComparison.OrdinalIgnoreCase);
 
             Dictionary<string, string> resultStrings =
-                await ReadTemplateStringsFromJsonFile(expectedFilename, cts.Token)
-                .ConfigureAwait(false);
+                await ReadTemplateStringsFromJsonFile(expectedFilename, cts.Token);
 
             Assert.Equal(locStrings.Count, resultStrings.Count);
             Assert.All(locStrings, x => Assert.Contains(x.Value, resultStrings.Values));
@@ -273,12 +264,11 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
     ""name"": ""translation""
 }",
                 new UTF8Encoding(fileStartsWithBom),
-                cts.Token).ConfigureAwait(false);
+                cts.Token);
 
-            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "en" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token)
-                .ConfigureAwait(false);
+            await TemplateStringUpdater.UpdateStringsAsync(InputStrings, "en", new string[] { "en" }, _workingDirectory, dryRun: false, NullLogger.Instance, cts.Token);
 
-            byte[] fileContent = await File.ReadAllBytesAsync(expectedFilename, cts.Token).ConfigureAwait(false);
+            byte[] fileContent = await File.ReadAllBytesAsync(expectedFilename, cts.Token);
             Assert.Equal(fileStartsWithBom, fileContent.AsSpan().StartsWith(new UTF8Encoding(true).Preamble));
         }
 
@@ -291,9 +281,7 @@ namespace Microsoft.TemplateEngine.TemplateLocalizer.Core.UnitTests
                 MaxDepth = 1,
             };
 
-            return await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(openStream, serializerOptions, cancellationToken)
-                .ConfigureAwait(false)
-                ?? new Dictionary<string, string>();
+            return await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(openStream, serializerOptions, cancellationToken) ?? new Dictionary<string, string>();
         }
     }
 }

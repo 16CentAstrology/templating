@@ -1,9 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#nullable enable
-
-using System;
 using Microsoft.TemplateEngine.Abstractions;
 
 namespace Microsoft.TemplateEngine.Core
@@ -15,7 +12,7 @@ namespace Microsoft.TemplateEngine.Core
             SourceRelativePath = sourceRelativePath;
             TargetRelativePath = targetRelativePath;
             ChangeKind = changeKind;
-            Contents = contents ?? Array.Empty<byte>();
+            Contents = contents ?? [];
         }
 
         public string SourceRelativePath { get; }

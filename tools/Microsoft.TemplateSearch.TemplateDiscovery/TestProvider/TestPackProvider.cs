@@ -88,11 +88,11 @@ namespace Microsoft.TemplateSearch.TemplateDiscovery.Test
 
             public IReadOnlyList<string> Owners => new[] { "TestAuthor" };
 
-            public bool Verified => false;
+            public bool Reserved => false;
 
-            public string? Description => "description";
+            public string Description => "description";
 
-            public string? IconUrl => "https://icon";
+            public string IconUrl => "https://icon";
         }
     }
 }
